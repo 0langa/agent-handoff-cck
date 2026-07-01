@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .render import render_export
-from .schema import HandoffSchema, Provider
+from .schema import HandoffSchema, Provider, parse_provider
 from .store import EXPORTS_DIR
 
 
@@ -23,9 +23,7 @@ def export_to(
     hd = handoff_dir or get_handoff_dir()
     ensure_handoff_dirs(hd)
 
-    provider = Provider(target) if target else Provider.UNKNOWN
-    if provider == Provider.UNKNOWN:
-        provider = Provider.UNKNOWN
+    provider = parse_provider(target)
     content = render_export(handoff, provider)
     path = export_path(hd, provider)
     with path.open("w", encoding="utf-8") as fh:

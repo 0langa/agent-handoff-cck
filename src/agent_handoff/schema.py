@@ -26,6 +26,30 @@ class Provider(str, Enum):
     UNKNOWN = "unknown"
 
 
+def parse_provider(value: str | Provider | None) -> Provider:
+    """Parse provider names defensively for CLI/user input."""
+    if isinstance(value, Provider):
+        return value
+    if not value:
+        return Provider.UNKNOWN
+    normalized = str(value).strip().lower()
+    aliases = {
+        "claude": "claude-code",
+        "claude_code": "claude-code",
+        "claudecode": "claude-code",
+        "kimi": "kimi-code",
+        "kimi_code": "kimi-code",
+        "kimicode": "kimi-code",
+        "generic": "unknown",
+        "any": "unknown",
+    }
+    normalized = aliases.get(normalized, normalized)
+    try:
+        return Provider(normalized)
+    except ValueError:
+        return Provider.UNKNOWN
+
+
 class CapabilityType(str, Enum):
     PLUGIN = "plugin"
     MCP = "mcp"
@@ -59,7 +83,7 @@ class TestResult(str, Enum):
 
 
 class CapabilityFallback(BaseModel):
-    type: FallbackType
+    type: FallbackType = FallbackType.BLOCKED
     details: str = ""
 
 
@@ -102,7 +126,7 @@ class ProvidersBlock(BaseModel):
     def _normalize_compatible(cls, value: Any) -> list[Provider]:
         if value is None:
             return []
-        return [Provider(v) if isinstance(v, str) else v for v in value]
+        return [parse_provider(v) for v in value]
 
 
 class ContextBlock(BaseModel):

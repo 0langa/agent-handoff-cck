@@ -29,9 +29,10 @@ def test_active_md_written(tmp_path: Path) -> None:
 def test_snapshot_creates_history(tmp_path: Path) -> None:
     handoff_dir = tmp_path / ".handoff"
     h = HandoffSchema(task={"title": "test"})
-    snap = store.snapshot(h, handoff_dir)
+    snap = store.snapshot(h, handoff_dir, "# test")
     assert snap.is_file()
     assert snap.parent.name == "history"
+    assert snap.with_suffix(".md").read_text(encoding="utf-8") == "# test\n"
 
 
 def test_close_archives_active(tmp_path: Path) -> None:

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 from pathlib import Path
 from typing import Any
 
@@ -65,7 +64,11 @@ def save(handoff: HandoffSchema, handoff_dir: Path | None = None) -> Path:
     return path
 
 
-def snapshot(handoff: HandoffSchema, handoff_dir: Path | None = None) -> Path:
+def snapshot(
+    handoff: HandoffSchema,
+    handoff_dir: Path | None = None,
+    markdown: str | None = None,
+) -> Path:
     hd = handoff_dir or get_handoff_dir()
     ensure_handoff_dirs(hd)
     timestamp = handoff.updated_at.strftime("%Y-%m-%dT%H%M%SZ")
@@ -76,6 +79,11 @@ def snapshot(handoff: HandoffSchema, handoff_dir: Path | None = None) -> Path:
     with snap_json.open("w", encoding="utf-8") as fh:
         json.dump(handoff.model_dump(by_alias=True, mode="json"), fh, indent=2)
         fh.write("\n")
+    if markdown is not None:
+        with snap_md.open("w", encoding="utf-8") as fh:
+            fh.write(markdown)
+            if not markdown.endswith("\n"):
+                fh.write("\n")
     return snap_json
 
 
@@ -91,11 +99,13 @@ def write_active_md(content: str, handoff_dir: Path | None = None) -> Path:
 
 
 def close(handoff: HandoffSchema, handoff_dir: Path | None = None) -> Path:
+    from .render import render_active
+
     hd = handoff_dir or get_handoff_dir()
     ensure_handoff_dirs(hd)
     handoff.task.status = TaskStatus.COMPLETE
     handoff.bump_updated_at()
-    snap = snapshot(handoff, hd)
+    snap = snapshot(handoff, hd, render_active(handoff))
     # Clear active files after archiving.
     active_json = active_json_path(hd)
     active_md = active_md_path(hd)

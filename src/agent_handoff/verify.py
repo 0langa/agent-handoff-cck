@@ -6,7 +6,7 @@ from pathlib import Path
 
 from . import store
 from .capabilities import check_missing_capabilities
-from .git_context import git_status
+from .git_context import git_status, is_git_repo
 from .schema import FallbackType, HandoffSchema, Provider, TaskStatus
 
 
@@ -82,7 +82,12 @@ def verify(
             result.warn(f"destructive action should require user approval: {action}")
 
     # Stale git status.
-    if repo_root and store.exists(store.get_handoff_dir(repo_root)):
+    if (
+        repo_root
+        and handoff.workspace.git_status
+        and is_git_repo(repo_root)
+        and store.exists(store.get_handoff_dir(repo_root))
+    ):
         try:
             current_status = git_status(repo_root)
             if current_status != (handoff.workspace.git_status or ""):

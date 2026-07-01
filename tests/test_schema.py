@@ -13,6 +13,7 @@ from agent_handoff.schema import (
     HandoffSchema,
     Provider,
     TaskStatus,
+    parse_provider,
 )
 
 
@@ -44,6 +45,13 @@ def test_handoff_roundtrip() -> None:
 def test_provider_enum_from_string() -> None:
     h = HandoffSchema(task={"title": "t"}, providers={"created_by": "kimi-code"})
     assert h.providers.created_by == Provider.KIMI_CODE
+
+
+def test_parse_provider_aliases_and_unknown_values() -> None:
+    assert parse_provider("claude") == Provider.CLAUDE_CODE
+    assert parse_provider("kimi") == Provider.KIMI_CODE
+    assert parse_provider("generic") == Provider.UNKNOWN
+    assert parse_provider("not-a-provider") == Provider.UNKNOWN
 
 
 def test_capability_entry() -> None:

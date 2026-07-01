@@ -28,6 +28,7 @@ from .schema import (
     TaskStatus,
     TestRecord,
     WorkspaceBlock,
+    parse_provider,
 )
 from .store import close as close_handoff
 from .store import exists, get_handoff_dir, load, save, snapshot, write_active_md
@@ -92,7 +93,7 @@ def init(
         context={"repo_root": str(root)},
     )
     if target_provider:
-        handoff.resume.recommended_next_provider = Provider(target_provider)
+        handoff.resume.recommended_next_provider = parse_provider(target_provider)
 
     save(handoff, handoff_dir)
     write_active_md(render_active(handoff), handoff_dir)
@@ -148,7 +149,7 @@ def capture(
         sys.exit(1)
 
     handoff = load(handoff_dir)
-    handoff.providers.last_updated_by = Provider(provider)
+    handoff.providers.last_updated_by = parse_provider(provider)
     handoff.bump_updated_at()
 
     # Update progress.
@@ -224,9 +225,10 @@ def capture(
     if next_prompt:
         handoff.resume.next_prompt = next_prompt
 
+    active_md = render_active(handoff)
     save(handoff, handoff_dir)
-    write_active_md(render_active(handoff), handoff_dir)
-    snapshot(handoff, handoff_dir)
+    write_active_md(active_md, handoff_dir)
+    snapshot(handoff, handoff_dir, active_md)
     click.echo(f"Captured handoff at {handoff_dir / 'active.json'}")
 
 
@@ -260,7 +262,7 @@ def resume(repo_root: str, provider: str) -> None:
         click.echo("No active handoff to resume.", err=True)
         sys.exit(1)
     handoff = load(handoff_dir)
-    current = Provider(provider)
+    current = parse_provider(provider)
 
     missing = check_missing_capabilities(handoff.capabilities.required_next, current)
     if missing:
@@ -290,7 +292,7 @@ def verify_cmd(repo_root: str, provider: str, strict: bool) -> None:
         click.echo("No active handoff.", err=True)
         sys.exit(1)
     handoff = load(handoff_dir)
-    result = verify(handoff, Provider(provider), root)
+    result = verify(handoff, parse_provider(provider), root)
 
     for warning in result.warnings:
         click.echo(f"WARN: {warning}")
@@ -332,7 +334,7 @@ def close(repo_root: str, provider: str) -> None:
         click.echo("No active handoff.", err=True)
         sys.exit(1)
     handoff = load(handoff_dir)
-    handoff.providers.last_updated_by = Provider(provider)
+    handoff.providers.last_updated_by = parse_provider(provider)
     handoff.resume.summary = handoff.resume.summary or "Task closed."
     snap = close_handoff(handoff, handoff_dir)
     click.echo(f"Closed and archived to {snap}")

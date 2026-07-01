@@ -1,44 +1,39 @@
 {
-  "id": "agent-handoff",
-  "name": "Agent Continuity",
+  "name": "agent-handoff",
   "version": "0.1.0",
-  "description": "Cross-agent handoff plugin for Codex, Claude Code, and Kimi Code.",
-  "type": "skill",
-  "skills": [
-    {
-      "name": "agent-handoff",
-      "description": "Capture and resume cross-agent handoffs.",
-      "entry_point": "skills/agent-handoff/SKILL.md"
-    }
+  "description": "Provider-neutral handoff records for Codex, Claude Code, and Kimi Code.",
+  "author": {
+    "name": "0langa"
+  },
+  "homepage": "https://github.com/0langa/agent-handoff-cck",
+  "repository": "https://github.com/0langa/agent-handoff-cck",
+  "license": "MIT",
+  "keywords": [
+    "handoff",
+    "continuity",
+    "codex",
+    "claude-code",
+    "kimi-code"
   ],
-  "commands": [
-    {
-      "name": "agent-handoff init",
-      "description": "Create a new handoff record."
-    },
-    {
-      "name": "agent-handoff capture",
-      "description": "Update handoff from current work state."
-    },
-    {
-      "name": "agent-handoff status",
-      "description": "Show current handoff status."
-    },
-    {
-      "name": "agent-handoff resume",
-      "description": "Continue from latest handoff."
-    },
-    {
-      "name": "agent-handoff verify",
-      "description": "Verify handoff completeness."
-    },
-    {
-      "name": "agent-handoff export",
-      "description": "Export continuation prompt for target provider."
-    },
-    {
-      "name": "agent-handoff close",
-      "description": "Mark task complete and archive."
-    }
-  ]
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Agent Continuity",
+    "shortDescription": "Capture and resume cross-agent handoffs.",
+    "longDescription": "Agent Continuity writes provider-neutral handoff artifacts so Codex, Claude Code, and Kimi Code can continue one another's work without losing task state, safety context, capability requirements, or next actions.",
+    "developerName": "0langa",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Planning"
+    ],
+    "websiteURL": "https://github.com/0langa/agent-handoff-cck",
+    "privacyPolicyURL": "https://github.com/0langa/agent-handoff-cck/blob/main/README.md",
+    "termsOfServiceURL": "https://github.com/0langa/agent-handoff-cck/blob/main/LICENSE",
+    "defaultPrompt": [
+      "Create a handoff for this task.",
+      "Resume from the latest handoff.",
+      "Verify this handoff before switching agents."
+    ]
+  }
 }

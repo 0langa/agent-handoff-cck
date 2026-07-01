@@ -6,6 +6,7 @@ import pytest
 
 from agent_handoff.render import render_active, render_export
 from agent_handoff.schema import HandoffSchema, Provider
+from agent_handoff.export import export_to
 
 
 def test_render_active_includes_title() -> None:
@@ -49,3 +50,10 @@ def test_export_generic_for_unknown_provider() -> None:
     h = HandoffSchema(task={"title": "t"})
     md = render_export(h, Provider.UNKNOWN)
     assert "Continuation Prompt" in md
+
+
+def test_export_to_generic_creates_unknown_export(tmp_path: Path) -> None:
+    h = HandoffSchema(task={"title": "t"})
+    path = export_to(h, "generic", tmp_path / ".handoff")
+    assert path.name == "unknown.md"
+    assert path.is_file()

@@ -76,7 +76,8 @@
     "CapabilityFallback": {
       "properties": {
         "type": {
-          "$ref": "#/$defs/FallbackType"
+          "$ref": "#/$defs/FallbackType",
+          "default": "blocked"
         },
         "details": {
           "default": "",
@@ -84,9 +85,6 @@
           "type": "string"
         }
       },
-      "required": [
-        "type"
-      ],
       "title": "CapabilityFallback",
       "type": "object"
     },

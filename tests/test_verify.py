@@ -68,3 +68,13 @@ def test_verify_fails_blocked_capability() -> None:
     result = verify(h)
     assert not result.ok
     assert any("blocked" in e for e in result.errors)
+
+
+def test_verify_does_not_warn_stale_git_for_non_git_directory(tmp_path: Path) -> None:
+    h = HandoffSchema(
+        task={"title": "t", "objective": "o", "status": TaskStatus.IN_PROGRESS.value},
+        progress={"next": ["step"]},
+        workspace={"git_status": ""},
+    )
+    result = verify(h, repo_root=tmp_path)
+    assert not any("git status differs" in w for w in result.warnings)
