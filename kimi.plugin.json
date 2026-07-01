@@ -1,0 +1,12 @@
+{
+  "id": "agent-handoff",
+  "name": "Agent Continuity",
+  "version": "0.1.0",
+  "description": "Cross-agent handoff plugin for Codex, Claude Code, and Kimi Code.",
+  "commands": {
+    "directory": "commands"
+  },
+  "skills": {
+    "directory": "skills"
+  }
+}

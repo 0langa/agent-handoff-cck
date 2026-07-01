@@ -1,0 +1,37 @@
+# Local planning and scratch files
+DEVELOPMENT_PLAN.md
+work/
+outputs/
+
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Handoff runtime data
+.handoff/
+
+# Logs
+*.log

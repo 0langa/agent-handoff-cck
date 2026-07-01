@@ -1,0 +1,123 @@
+# Continuation Prompt — Codex
+
+You are resuming work previously captured by another agent. Use Codex tools (`git`, `read`, `edit`, `bash`, etc.) as needed.
+
+## Task
+
+**{{ h.task.title }}**
+
+Status: `{{ h.task.status.value }}`
+
+### Objective
+
+{{ h.task.objective or "_(No objective set)_" }}
+
+## What Was Done
+
+{% for item in h.progress.done %}
+- {{ item }}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+## What Is In Progress
+
+{% for item in h.progress.current %}
+- {{ item }}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+## Next Steps
+
+{% for item in h.progress.next %}
+- {{ item }}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+## Blockers
+
+{% for item in h.progress.blockers %}
+- {{ item }}
+{% else %}
+- _(none)_
+{% endfor %}
+
+## Workspace State
+
+{% if h.workspace.git_status %}
+Git status:
+
+```text
+{{ h.workspace.git_status }}
+```
+{% endif %}
+
+{% if h.workspace.changed_files %}
+Changed files:
+{% for f in h.workspace.changed_files %}
+- `{{ f }}`
+{% endfor %}
+{% endif %}
+
+{% if h.workspace.tests_run %}
+Tests run:
+{% for t in h.workspace.tests_run %}
+- `{{ t.command }}` — {{ t.result.value }}{% if t.summary %}: {{ t.summary }}{% endif %}
+{% endfor %}
+{% endif %}
+
+## Important Context
+
+{% for f in h.context.important_files %}
+- File: `{{ f }}`
+{% endfor %}
+
+{% for d in h.context.decisions %}
+- Decision: {{ d }}
+{% endfor %}
+
+{% for c in h.context.constraints %}
+- Constraint: {{ c }}
+{% endfor %}
+
+{% for q in h.context.open_questions %}
+- Open question: {{ q }}
+{% endfor %}
+
+## Capability Warnings
+
+{% for cap in h.capabilities.required_next %}
+{% if cap.required_to_continue %}
+- **Required:** `{{ cap.id }}` ({{ cap.type.value }} via {{ cap.provider.value }}){% if cap.purpose %}: {{ cap.purpose }}{% endif %}
+  {% if cap.fallback and cap.fallback.type.value != "blocked" %}
+  Fallback: {{ cap.fallback.type.value }} — {{ cap.fallback.details }}
+  {% else %}
+  **No safe fallback. Stop and ask the user before continuing.**
+  {% endif %}
+{% endif %}
+{% endfor %}
+
+## Safety Notes
+
+{% if h.safety.secrets_touched %}
+- **Secrets were touched in the previous session.** Do not expose them. Ask the user if uncertain.
+{% endif %}
+{% for a in h.safety.destructive_actions %}
+- Destructive action recorded: {{ a }}
+{% endfor %}
+{% for a in h.safety.needs_user_approval %}
+- Requires user approval: {{ a }}
+{% endfor %}
+{% for n in h.safety.privacy_notes %}
+- Privacy note: {{ n }}
+{% endfor %}
+
+## Resume Summary
+
+{{ h.resume.summary or "_(no resume summary)_" }}
+
+{% if h.resume.next_prompt %}
+{{ h.resume.next_prompt }}
+{% endif %}

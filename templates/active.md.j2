@@ -1,0 +1,169 @@
+# {{ h.task.title }}
+
+> Handoff ID: `{{ h.handoff_id }}`  
+> Created: {{ h.created_at.isoformat() }}  
+> Updated: {{ h.updated_at.isoformat() }}  
+> Created by: `{{ h.providers.created_by.value }}`  
+> Last updated by: `{{ h.providers.last_updated_by.value }}`
+
+## Objective
+
+{{ h.task.objective or "_(No objective set)_" }}
+
+## Status
+
+`{{ h.task.status.value }}`
+
+## Progress
+
+### Done
+{% for item in h.progress.done %}
+- {{ item }}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+### Current
+{% for item in h.progress.current %}
+- {{ item }}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+### Next
+{% for item in h.progress.next %}
+- {{ item }}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+### Blockers
+{% for item in h.progress.blockers %}
+- {{ item }}
+{% else %}
+- _(none)_
+{% endfor %}
+
+## Context
+
+### Important Files
+{% for f in h.context.important_files %}
+- `{{ f }}`
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+### Constraints
+{% for c in h.context.constraints %}
+- {{ c }}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+### Decisions
+{% for d in h.context.decisions %}
+- {{ d }}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+### Open Questions
+{% for q in h.context.open_questions %}
+- {{ q }}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+## Workspace
+
+### Git Status
+
+```text
+{{ h.workspace.git_status or "_(not captured)_" }}
+```
+
+### Changed Files
+{% for f in h.workspace.changed_files %}
+- `{{ f }}`
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+### Commands Run
+{% for cmd in h.workspace.commands_run %}
+- `{{ cmd.command }}` — {{ cmd.result.value }}{% if cmd.purpose %}: {{ cmd.purpose }}{% endif %}{% if cmd.notes %} ({{ cmd.notes }}){% endif %}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+### Tests Run
+{% for t in h.workspace.tests_run %}
+- `{{ t.command }}` — {{ t.result.value }}{% if t.summary %}: {{ t.summary }}{% endif %}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+## Capabilities
+
+### Used
+{% for cap in h.capabilities.used %}
+- `{{ cap.id }}` ({{ cap.type.value }} via {{ cap.provider.value }}){% if cap.purpose %}: {{ cap.purpose }}{% endif %}{% if cap.outputs_captured %} — outputs captured{% endif %}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+### Required Next
+{% for cap in h.capabilities.required_next %}
+- `{{ cap.id }}` ({{ cap.type.value }} via {{ cap.provider.value }}){% if cap.purpose %}: {{ cap.purpose }}{% endif %}
+{% else %}
+- _(none recorded)_
+{% endfor %}
+
+### Missing at Capture
+{% for cap in h.capabilities.missing_at_capture %}
+- `{{ cap.id }}` ({{ cap.type.value }} via {{ cap.provider.value }}){% if cap.purpose %}: {{ cap.purpose }}{% endif %}
+{% else %}
+- _(none)_
+{% endfor %}
+
+## Safety
+
+- Secrets touched: `{{ h.safety.secrets_touched }}`
+{% if h.safety.sensitive_sources %}
+### Sensitive Sources
+{% for s in h.safety.sensitive_sources %}
+- {{ s }}
+{% endfor %}
+{% endif %}
+{% if h.safety.destructive_actions %}
+### Destructive Actions
+{% for a in h.safety.destructive_actions %}
+- {{ a }}
+{% endfor %}
+{% endif %}
+{% if h.safety.needs_user_approval %}
+### Needs User Approval
+{% for a in h.safety.needs_user_approval %}
+- {{ a }}
+{% endfor %}
+{% endif %}
+{% if h.safety.privacy_notes %}
+### Privacy Notes
+{% for n in h.safety.privacy_notes %}
+- {{ n }}
+{% endfor %}
+{% endif %}
+
+## Resume
+
+{{ h.resume.summary or "_(no resume summary)_" }}
+
+{% if h.resume.recommended_next_provider.value != "unknown" %}
+**Recommended next provider:** `{{ h.resume.recommended_next_provider.value }}`
+{% endif %}
+
+{% if h.resume.next_prompt %}
+### Next Prompt
+
+{{ h.resume.next_prompt }}
+{% endif %}

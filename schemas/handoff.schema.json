@@ -1,0 +1,531 @@
+{
+  "$defs": {
+    "CapabilitiesBlock": {
+      "properties": {
+        "used": {
+          "items": {
+            "$ref": "#/$defs/CapabilityEntry"
+          },
+          "title": "Used",
+          "type": "array"
+        },
+        "required_next": {
+          "items": {
+            "$ref": "#/$defs/CapabilityEntry"
+          },
+          "title": "Required Next",
+          "type": "array"
+        },
+        "missing_at_capture": {
+          "items": {
+            "$ref": "#/$defs/CapabilityEntry"
+          },
+          "title": "Missing At Capture",
+          "type": "array"
+        },
+        "fallbacks": {
+          "items": {
+            "$ref": "#/$defs/CapabilityFallback"
+          },
+          "title": "Fallbacks",
+          "type": "array"
+        }
+      },
+      "title": "CapabilitiesBlock",
+      "type": "object"
+    },
+    "CapabilityEntry": {
+      "properties": {
+        "provider": {
+          "$ref": "#/$defs/Provider"
+        },
+        "type": {
+          "$ref": "#/$defs/CapabilityType"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "purpose": {
+          "default": "",
+          "title": "Purpose",
+          "type": "string"
+        },
+        "outputs_captured": {
+          "default": false,
+          "title": "Outputs Captured",
+          "type": "boolean"
+        },
+        "required_to_continue": {
+          "default": false,
+          "title": "Required To Continue",
+          "type": "boolean"
+        },
+        "fallback": {
+          "$ref": "#/$defs/CapabilityFallback"
+        }
+      },
+      "required": [
+        "provider",
+        "type",
+        "id"
+      ],
+      "title": "CapabilityEntry",
+      "type": "object"
+    },
+    "CapabilityFallback": {
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/FallbackType"
+        },
+        "details": {
+          "default": "",
+          "title": "Details",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "CapabilityFallback",
+      "type": "object"
+    },
+    "CapabilityType": {
+      "enum": [
+        "plugin",
+        "mcp",
+        "app",
+        "shell",
+        "filesystem",
+        "browser",
+        "manual"
+      ],
+      "title": "CapabilityType",
+      "type": "string"
+    },
+    "CommandRecord": {
+      "properties": {
+        "command": {
+          "title": "Command",
+          "type": "string"
+        },
+        "purpose": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Purpose"
+        },
+        "result": {
+          "$ref": "#/$defs/CommandResult",
+          "default": "unknown"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "title": "CommandRecord",
+      "type": "object"
+    },
+    "CommandResult": {
+      "enum": [
+        "success",
+        "failed",
+        "unknown"
+      ],
+      "title": "CommandResult",
+      "type": "string"
+    },
+    "ContextBlock": {
+      "properties": {
+        "repo_root": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Repo Root"
+        },
+        "workspace_roots": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Workspace Roots",
+          "type": "array"
+        },
+        "important_files": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Important Files",
+          "type": "array"
+        },
+        "constraints": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Constraints",
+          "type": "array"
+        },
+        "decisions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Decisions",
+          "type": "array"
+        },
+        "open_questions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Open Questions",
+          "type": "array"
+        }
+      },
+      "title": "ContextBlock",
+      "type": "object"
+    },
+    "FallbackType": {
+      "enum": [
+        "captured-result",
+        "manual-user-input",
+        "switch-provider",
+        "local-equivalent",
+        "skip-safe",
+        "blocked"
+      ],
+      "title": "FallbackType",
+      "type": "string"
+    },
+    "ProgressBlock": {
+      "properties": {
+        "done": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Done",
+          "type": "array"
+        },
+        "current": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Current",
+          "type": "array"
+        },
+        "next": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Next",
+          "type": "array"
+        },
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blockers",
+          "type": "array"
+        }
+      },
+      "title": "ProgressBlock",
+      "type": "object"
+    },
+    "Provider": {
+      "enum": [
+        "codex",
+        "claude-code",
+        "kimi-code",
+        "unknown"
+      ],
+      "title": "Provider",
+      "type": "string"
+    },
+    "ProvidersBlock": {
+      "properties": {
+        "created_by": {
+          "$ref": "#/$defs/Provider",
+          "default": "unknown"
+        },
+        "last_updated_by": {
+          "$ref": "#/$defs/Provider",
+          "default": "unknown"
+        },
+        "compatible_with": {
+          "items": {
+            "$ref": "#/$defs/Provider"
+          },
+          "title": "Compatible With",
+          "type": "array"
+        }
+      },
+      "title": "ProvidersBlock",
+      "type": "object"
+    },
+    "RecallBlock": {
+      "properties": {
+        "linked_memory_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Linked Memory Ids",
+          "type": "array"
+        },
+        "sync_status": {
+          "default": "not_configured",
+          "enum": [
+            "not_configured",
+            "synced",
+            "failed"
+          ],
+          "title": "Sync Status",
+          "type": "string"
+        }
+      },
+      "title": "RecallBlock",
+      "type": "object"
+    },
+    "ResumeBlock": {
+      "properties": {
+        "summary": {
+          "default": "",
+          "title": "Summary",
+          "type": "string"
+        },
+        "recommended_next_provider": {
+          "$ref": "#/$defs/Provider",
+          "default": "unknown"
+        },
+        "next_prompt": {
+          "default": "",
+          "title": "Next Prompt",
+          "type": "string"
+        }
+      },
+      "title": "ResumeBlock",
+      "type": "object"
+    },
+    "SafetyBlock": {
+      "properties": {
+        "secrets_touched": {
+          "default": false,
+          "title": "Secrets Touched",
+          "type": "boolean"
+        },
+        "sensitive_sources": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sensitive Sources",
+          "type": "array"
+        },
+        "destructive_actions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Destructive Actions",
+          "type": "array"
+        },
+        "needs_user_approval": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Needs User Approval",
+          "type": "array"
+        },
+        "privacy_notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Privacy Notes",
+          "type": "array"
+        }
+      },
+      "title": "SafetyBlock",
+      "type": "object"
+    },
+    "TaskBlock": {
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "objective": {
+          "default": "",
+          "title": "Objective",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/TaskStatus",
+          "default": "in_progress"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "title": "TaskBlock",
+      "type": "object"
+    },
+    "TaskStatus": {
+      "enum": [
+        "not_started",
+        "in_progress",
+        "blocked",
+        "complete",
+        "abandoned"
+      ],
+      "title": "TaskStatus",
+      "type": "string"
+    },
+    "TestRecord": {
+      "properties": {
+        "command": {
+          "title": "Command",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/$defs/TestResult",
+          "default": "unknown"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Summary"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "title": "TestRecord",
+      "type": "object"
+    },
+    "TestResult": {
+      "enum": [
+        "passed",
+        "failed",
+        "skipped",
+        "unknown"
+      ],
+      "title": "TestResult",
+      "type": "string"
+    },
+    "WorkspaceBlock": {
+      "properties": {
+        "git_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Git Status"
+        },
+        "changed_files": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Changed Files",
+          "type": "array"
+        },
+        "commands_run": {
+          "items": {
+            "$ref": "#/$defs/CommandRecord"
+          },
+          "title": "Commands Run",
+          "type": "array"
+        },
+        "tests_run": {
+          "items": {
+            "$ref": "#/$defs/TestRecord"
+          },
+          "title": "Tests Run",
+          "type": "array"
+        }
+      },
+      "title": "WorkspaceBlock",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": {
+      "default": "1.0",
+      "title": "Schemaversion",
+      "type": "string"
+    },
+    "handoffId": {
+      "title": "Handoffid",
+      "type": "string"
+    },
+    "createdAt": {
+      "format": "date-time",
+      "title": "Createdat",
+      "type": "string"
+    },
+    "updatedAt": {
+      "format": "date-time",
+      "title": "Updatedat",
+      "type": "string"
+    },
+    "task": {
+      "$ref": "#/$defs/TaskBlock"
+    },
+    "providers": {
+      "$ref": "#/$defs/ProvidersBlock"
+    },
+    "context": {
+      "$ref": "#/$defs/ContextBlock"
+    },
+    "progress": {
+      "$ref": "#/$defs/ProgressBlock"
+    },
+    "workspace": {
+      "$ref": "#/$defs/WorkspaceBlock"
+    },
+    "capabilities": {
+      "$ref": "#/$defs/CapabilitiesBlock"
+    },
+    "safety": {
+      "$ref": "#/$defs/SafetyBlock"
+    },
+    "resume": {
+      "$ref": "#/$defs/ResumeBlock"
+    },
+    "recall": {
+      "$ref": "#/$defs/RecallBlock"
+    }
+  },
+  "title": "HandoffSchema",
+  "type": "object"
+}

@@ -1,0 +1,44 @@
+{
+  "id": "agent-handoff",
+  "name": "Agent Continuity",
+  "version": "0.1.0",
+  "description": "Cross-agent handoff plugin for Codex, Claude Code, and Kimi Code.",
+  "type": "skill",
+  "skills": [
+    {
+      "name": "agent-handoff",
+      "description": "Capture and resume cross-agent handoffs.",
+      "entry_point": "skills/agent-handoff/SKILL.md"
+    }
+  ],
+  "commands": [
+    {
+      "name": "agent-handoff init",
+      "description": "Create a new handoff record."
+    },
+    {
+      "name": "agent-handoff capture",
+      "description": "Update handoff from current work state."
+    },
+    {
+      "name": "agent-handoff status",
+      "description": "Show current handoff status."
+    },
+    {
+      "name": "agent-handoff resume",
+      "description": "Continue from latest handoff."
+    },
+    {
+      "name": "agent-handoff verify",
+      "description": "Verify handoff completeness."
+    },
+    {
+      "name": "agent-handoff export",
+      "description": "Export continuation prompt for target provider."
+    },
+    {
+      "name": "agent-handoff close",
+      "description": "Mark task complete and archive."
+    }
+  ]
+}
