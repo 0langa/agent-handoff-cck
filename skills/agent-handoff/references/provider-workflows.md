@@ -4,12 +4,12 @@
 
 Manifest: `.codex-plugin/plugin.json`
 
-User-facing commands:
+Verified workflow:
 
 ```text
-@agent-handoff capture current task
-@agent-handoff resume latest handoff
-@agent-handoff export claude-code
+agent-handoff capture --provider codex
+agent-handoff resume --provider codex
+agent-handoff export claude-code
 ```
 
 Implementation notes:
@@ -17,48 +17,47 @@ Implementation notes:
 - Use Codex filesystem/git tools when available.
 - Record Codex-specific connectors (Gmail, GitHub).
 - Do not assume Claude/Kimi have Codex connectors.
+- Plugin-native command installation depends on the Codex marketplace/client install path.
 
 ## Claude Code
 
 Manifest: `.claude-plugin/plugin.json`
 
-Slash commands:
+Verified workflow:
 
 ```text
-/handoff:init
-/handoff:capture
-/handoff:resume
-/handoff:status
-/handoff:verify
-/handoff:export
-/handoff:close
+agent-handoff init --provider claude-code
+agent-handoff capture --provider claude-code
+agent-handoff resume --provider claude-code
+agent-handoff verify --provider claude-code
+agent-handoff export codex
 ```
 
 Implementation notes:
 
 - Prefer shell/git inspection.
 - Avoid auto-running destructive commands.
-- Use agents for verification and summarization later.
+- Claude Code can structurally validate `.claude-plugin/plugin.json`.
+- Slash commands may be available when the client discovers the `commands/` directory.
 
 ## Kimi Code
 
 Manifest: `kimi.plugin.json`
 
-Commands:
+Verified workflow:
 
 ```text
-/agent-handoff:init
-/agent-handoff:capture
-/agent-handoff:resume
-/agent-handoff:status
-/agent-handoff:verify
-/agent-handoff:export
-/agent-handoff:close
+agent-handoff init --provider kimi-code
+agent-handoff capture --provider kimi-code
+agent-handoff resume --provider kimi-code
+agent-handoff verify --provider kimi-code
+agent-handoff export claude-code
 ```
 
 Implementation notes:
 
-- Use Kimi plugin command namespace.
+- Kimi Code CLI uses the in-session `/plugins install <path-or-url>` workflow, not a shell `kimi plugin install` subcommand.
+- `kimi.plugin.json` declares `skills`, `commands`, and `sessionStart.skill`; after plugin installation and `/reload`, commands should be namespaced as `/agent-handoff:<command>`.
 - Keep command prompts provider-neutral.
 - Detect Kimi-only limitations and request fallback if needed.
 

@@ -3,17 +3,23 @@ name: status
 description: Show current handoff status.
 ---
 
-# /handoff status
+# Agent Handoff: status
 
-Show current handoff status.
+Show current handoff status by running the CLI from the repository root.
 
-## Usage
+Use the arguments supplied after the slash command as CLI arguments:
 
 ```text
-agent-handoff status
+agent-handoff status $ARGUMENTS
 ```
 
-## Output
+If `agent-handoff` is not on PATH and this is the plugin source checkout, use:
+
+```text
+uv run agent-handoff status $ARGUMENTS
+```
+
+Report the CLI output directly and summarize only if the user asked for a summary.
 
 - Title
 - Status

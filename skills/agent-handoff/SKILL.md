@@ -50,8 +50,8 @@ When a capability is provider-bound, record a fallback:
 
 ## Provider-specific notes
 
-- Codex: use `@agent-handoff capture` style commands if supported.
-- Claude Code: use `/handoff:*` slash commands.
-- Kimi Code: use `/agent-handoff:*` commands.
+- Codex: use the `agent-handoff` CLI from the repository root; plugin-native commands are marketplace/client dependent.
+- Claude Code: use the `agent-handoff` CLI from the repository root; slash commands may be available when the client discovers the `commands/` directory.
+- Kimi Code: use the `agent-handoff` CLI from the repository root or the namespaced plugin commands after installing with `/plugins install <path-or-url>`.
 
 All providers read and write the same `.handoff/active.json` schema.

@@ -74,6 +74,41 @@ def test_verify_passes(tmp_path: Path) -> None:
     assert "PASS" in result.output
 
 
+def test_capture_accepts_common_result_aliases(tmp_path: Path) -> None:
+    runner = CliRunner()
+    runner.invoke(
+        main,
+        [
+            "init",
+            "--title",
+            "test",
+            "--objective",
+            "objective",
+            "--repo-root",
+            str(tmp_path),
+            "--provider",
+            "codex",
+        ],
+    )
+    result = runner.invoke(
+        main,
+        [
+            "capture",
+            "--repo-root",
+            str(tmp_path),
+            "--provider",
+            "kimi-code",
+            "--next",
+            "export",
+            "--command",
+            "pytest|run tests|passed",
+            "--test",
+            "pytest|success|all green",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+
 def test_export_creates_file(tmp_path: Path) -> None:
     runner = CliRunner()
     runner.invoke(

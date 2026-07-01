@@ -18,6 +18,7 @@ from .render import render_active
 from .schema import (
     CapabilityEntry,
     CapabilityType,
+    CommandResult,
     CommandRecord,
     ContextBlock,
     FallbackType,
@@ -26,6 +27,7 @@ from .schema import (
     Provider,
     SafetyBlock,
     TaskStatus,
+    TestResult,
     TestRecord,
     WorkspaceBlock,
     parse_provider,
@@ -345,7 +347,7 @@ def _parse_command(text: str) -> CommandRecord:
     return CommandRecord(
         command=parts[0],
         purpose=parts[1] if len(parts) > 1 else None,
-        result=parts[2] if len(parts) > 2 else "unknown",
+        result=_parse_command_result(parts[2] if len(parts) > 2 else None),
     )
 
 
@@ -353,7 +355,7 @@ def _parse_test(text: str) -> TestRecord:
     parts = text.split("|", 2)
     return TestRecord(
         command=parts[0],
-        result=parts[1] if len(parts) > 1 else "unknown",
+        result=_parse_test_result(parts[1] if len(parts) > 1 else None),
         summary=parts[2] if len(parts) > 2 else None,
     )
 
@@ -361,6 +363,51 @@ def _parse_test(text: str) -> TestRecord:
 def _parse_capability(text: str) -> CapabilityEntry:
     data = json.loads(text)
     return CapabilityEntry.model_validate(data)
+
+
+def _parse_command_result(value: str | None) -> CommandResult:
+    normalized = (value or "unknown").strip().lower()
+    aliases = {
+        "ok": CommandResult.SUCCESS,
+        "pass": CommandResult.SUCCESS,
+        "passed": CommandResult.SUCCESS,
+        "success": CommandResult.SUCCESS,
+        "succeeded": CommandResult.SUCCESS,
+        "green": CommandResult.SUCCESS,
+        "fail": CommandResult.FAILED,
+        "failed": CommandResult.FAILED,
+        "failure": CommandResult.FAILED,
+        "error": CommandResult.FAILED,
+        "unknown": CommandResult.UNKNOWN,
+        "n/a": CommandResult.UNKNOWN,
+        "na": CommandResult.UNKNOWN,
+        "skipped": CommandResult.UNKNOWN,
+    }
+    return aliases.get(normalized, CommandResult.UNKNOWN)
+
+
+def _parse_test_result(value: str | None) -> TestResult:
+    normalized = (value or "unknown").strip().lower()
+    aliases = {
+        "ok": TestResult.PASSED,
+        "pass": TestResult.PASSED,
+        "passed": TestResult.PASSED,
+        "success": TestResult.PASSED,
+        "succeeded": TestResult.PASSED,
+        "green": TestResult.PASSED,
+        "fail": TestResult.FAILED,
+        "failed": TestResult.FAILED,
+        "failure": TestResult.FAILED,
+        "error": TestResult.FAILED,
+        "skip": TestResult.SKIPPED,
+        "skipped": TestResult.SKIPPED,
+        "not-run": TestResult.SKIPPED,
+        "not_run": TestResult.SKIPPED,
+        "unknown": TestResult.UNKNOWN,
+        "n/a": TestResult.UNKNOWN,
+        "na": TestResult.UNKNOWN,
+    }
+    return aliases.get(normalized, TestResult.UNKNOWN)
 
 
 if __name__ == "__main__":

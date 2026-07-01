@@ -3,17 +3,23 @@ name: resume
 description: Continue from latest handoff.
 ---
 
-# /handoff resume
+# Agent Handoff: resume
 
-Continue from latest handoff.
+Continue from the latest handoff by running the CLI from the repository root and then following the printed continuation context.
 
-## Usage
+Use the arguments supplied after the slash command as CLI arguments:
 
 ```text
-agent-handoff resume --provider claude-code
+agent-handoff resume $ARGUMENTS
 ```
 
-## Behavior
+If `agent-handoff` is not on PATH and this is the plugin source checkout, use:
+
+```text
+uv run agent-handoff resume $ARGUMENTS
+```
+
+If capability warnings are printed, respect the fallback instructions before continuing.
 
 - Reads `.handoff/active.json`.
 - Validates schema.

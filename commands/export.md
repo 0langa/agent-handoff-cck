@@ -3,20 +3,23 @@ name: export
 description: Generate continuation prompt for target provider.
 ---
 
-# /handoff export
+# Agent Handoff: export
 
-Generate continuation prompt for target provider.
+Generate a continuation prompt for a target provider by running the CLI from the repository root.
 
-## Usage
+Use the arguments supplied after the slash command as CLI arguments:
 
 ```text
-agent-handoff export codex
-agent-handoff export claude-code
-agent-handoff export kimi-code
-agent-handoff export generic
+agent-handoff export $ARGUMENTS
 ```
 
-## Output
+If `agent-handoff` is not on PATH and this is the plugin source checkout, use:
+
+```text
+uv run agent-handoff export $ARGUMENTS
+```
+
+If no target is supplied, ask which target to export: `codex`, `claude-code`, `kimi-code`, or `generic`.
 
 - `.handoff/exports/codex.md`
 - `.handoff/exports/claude-code.md`

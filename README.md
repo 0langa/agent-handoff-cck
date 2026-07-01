@@ -32,6 +32,9 @@ agent-handoff close --provider claude-code
 - Claude Code: `.claude-plugin/plugin.json`
 - Kimi Code: `kimi.plugin.json`
 
+Kimi Code plugins are installed from inside a Kimi session with `/plugins install <path-or-url>`.
+The shell command `kimi plugin install` is not part of the local CLI tested here.
+
 ## Files produced
 
 - `.handoff/active.json` — canonical handoff.

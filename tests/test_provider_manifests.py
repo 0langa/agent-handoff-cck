@@ -32,9 +32,14 @@ def test_kimi_manifest_valid() -> None:
     data = _load_manifest("kimi.plugin.json")
     assert data["name"] == "agent-handoff"
     assert "skills" in data
+    assert data["commands"] == "./commands/"
+    assert data["sessionStart"]["skill"] == "agent-handoff"
     # Kimi Code plugin manifest ignores unsupported runtime fields such as
-    # `tools`, `commands`, `apps`, `inject`, and `configFile`.
-    assert "commands" not in data
+    # `tools`, `apps`, `inject`, and `configFile`.
+    assert "tools" not in data
+    assert "apps" not in data
+    assert "inject" not in data
+    assert "configFile" not in data
 
 
 def test_all_manifests_share_id_and_version() -> None:

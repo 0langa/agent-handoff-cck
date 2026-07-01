@@ -14,7 +14,15 @@
   },
   "homepage": "https://github.com/0langa/agent-handoff-cck",
   "license": "MIT",
+  "interface": {
+    "displayName": "Agent Continuity",
+    "shortDescription": "Capture and resume cross-agent handoffs.",
+    "longDescription": "Provider-neutral handoff records for Kimi Code, Codex, and Claude Code.",
+    "developerName": "0langa",
+    "websiteURL": "https://github.com/0langa/agent-handoff-cck"
+  },
   "skills": "./skills/",
+  "commands": "./commands/",
   "sessionStart": {
     "skill": "agent-handoff"
   },
