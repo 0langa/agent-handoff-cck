@@ -1,3 +1,8 @@
+---
+name: capture
+description: Update handoff from current work state.
+---
+
 # /handoff capture
 
 Update handoff from current work state.

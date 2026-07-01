@@ -1,3 +1,8 @@
+---
+name: handoff-summarizer
+description: Compress current work state into a durable handoff.
+---
+
 # handoff-summarizer
 
 Compress current work state into a durable handoff.

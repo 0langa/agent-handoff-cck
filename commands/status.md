@@ -1,3 +1,8 @@
+---
+name: status
+description: Show current handoff status.
+---
+
 # /handoff status
 
 Show current handoff status.

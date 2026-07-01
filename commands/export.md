@@ -1,3 +1,8 @@
+---
+name: export
+description: Generate continuation prompt for target provider.
+---
+
 # /handoff export
 
 Generate continuation prompt for target provider.

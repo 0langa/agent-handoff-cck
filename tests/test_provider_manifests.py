@@ -16,23 +16,25 @@ def test_codex_manifest_valid() -> None:
     data = _load_manifest(".codex-plugin/plugin.json")
     assert data["name"] == "agent-handoff"
     assert "skills" in data
-    assert data["skills"] == "./skills/"
-    assert "interface" in data
 
 
 def test_claude_manifest_valid() -> None:
     data = _load_manifest(".claude-plugin/plugin.json")
     assert data["name"] == "agent-handoff"
-    assert data["commands"] == "./commands/"
-    assert data["agents"] == "./agents/"
-    assert data["skills"] == "./skills/"
+    # Claude Code auto-discovers skills/commands/agents from directory structure;
+    # plugin.json should stay minimal.
+    assert "skills" not in data
+    assert "commands" not in data
+    assert "agents" not in data
 
 
 def test_kimi_manifest_valid() -> None:
     data = _load_manifest("kimi.plugin.json")
     assert data["name"] == "agent-handoff"
-    assert data["commands"] == "./commands/"
-    assert data["skills"] == "./skills/"
+    assert "skills" in data
+    # Kimi Code plugin manifest ignores unsupported runtime fields such as
+    # `tools`, `commands`, `apps`, `inject`, and `configFile`.
+    assert "commands" not in data
 
 
 def test_all_manifests_share_id_and_version() -> None:

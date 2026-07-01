@@ -1,3 +1,8 @@
+---
+name: handoff-verifier
+description: Check handoff completeness before switching providers.
+---
+
 # handoff-verifier
 
 Check handoff completeness before switching providers.

@@ -1,3 +1,8 @@
+---
+name: resume
+description: Continue from latest handoff.
+---
+
 # /handoff resume
 
 Continue from latest handoff.

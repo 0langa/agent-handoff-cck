@@ -1,3 +1,8 @@
+---
+name: close
+description: Mark task complete and archive.
+---
+
 # /handoff close
 
 Mark task complete and archive.

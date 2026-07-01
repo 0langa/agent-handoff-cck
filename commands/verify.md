@@ -1,3 +1,8 @@
+---
+name: verify
+description: Verify handoff quality before switching providers.
+---
+
 # /handoff verify
 
 Verify handoff quality before switching providers.

@@ -8,24 +8,11 @@
   "homepage": "https://github.com/0langa/agent-handoff-cck",
   "repository": "https://github.com/0langa/agent-handoff-cck",
   "license": "MIT",
-  "skills": "./skills/",
-  "agents": "./agents/",
-  "commands": "./commands/",
-  "interface": {
-    "displayName": "Agent Continuity",
-    "shortDescription": "Capture and resume cross-agent handoffs.",
-    "longDescription": "Agent Continuity lets Claude Code continue work from Codex or Kimi Code, and produce handoffs those agents can resume.",
-    "developerName": "0langa",
-    "category": "Productivity",
-    "capabilities": [
-      "Read",
-      "Write",
-      "Planning"
-    ],
-    "defaultPrompt": [
-      "Create a handoff for this task.",
-      "Resume from the latest handoff.",
-      "Verify this handoff before switching agents."
-    ]
-  }
+  "keywords": [
+    "handoff",
+    "continuity",
+    "codex",
+    "claude-code",
+    "kimi-code"
+  ]
 }

@@ -1,3 +1,8 @@
+---
+name: init
+description: Create a new handoff record.
+---
+
 # /handoff init
 
 Create a new handoff record.
