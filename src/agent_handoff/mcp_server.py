@@ -172,7 +172,16 @@ def _parse_test_result(value: str | None) -> TestResult:
     return _TEST_RESULT_ALIASES.get((value or "unknown").strip().lower(), TestResult.UNKNOWN)
 
 
-def _to_command_record(item: CommandInput) -> CommandRecord:
+def _coerce_model(model: type[BaseModel], item: BaseModel | dict[str, Any]) -> BaseModel:
+    if isinstance(item, model):
+        return item
+    if isinstance(item, dict):
+        return model.model_validate(item)
+    raise TypeError(f"Expected {model.__name__} or dict, got {type(item).__name__}")
+
+
+def _to_command_record(item: CommandInput | dict[str, Any]) -> CommandRecord:
+    item = _coerce_model(CommandInput, item)
     return CommandRecord(
         command=_redact(item.command),
         purpose=_redact(item.purpose) if item.purpose else None,
@@ -181,7 +190,8 @@ def _to_command_record(item: CommandInput) -> CommandRecord:
     )
 
 
-def _to_test_record(item: TestInput) -> TestRecord:
+def _to_test_record(item: TestInput | dict[str, Any]) -> TestRecord:
+    item = _coerce_model(TestInput, item)
     return TestRecord(
         command=_redact(item.command),
         result=_parse_test_result(item.result),
@@ -189,7 +199,11 @@ def _to_test_record(item: TestInput) -> TestRecord:
     )
 
 
-def _to_capability_entry(item: CapabilityInput, default_provider: Provider) -> CapabilityEntry:
+def _to_capability_entry(
+    item: CapabilityInput | dict[str, Any],
+    default_provider: Provider,
+) -> CapabilityEntry:
+    item = _coerce_model(CapabilityInput, item)
     cap_provider = parse_provider(item.provider) if item.provider else default_provider
     cap_type = CapabilityType(item.type) if item.type else CapabilityType.MANUAL
     fallback_type = FallbackType(item.fallback_type) if item.fallback_type else FallbackType.BLOCKED
@@ -254,7 +268,7 @@ def handoff_init(
         )
 
     try:
-        current = _normalize_provider(provider)
+        current_provider = _normalize_provider(provider)
     except ValueError as exc:
         return _err("invalid_provider", str(exc))
 
@@ -265,8 +279,8 @@ def handoff_init(
             "status": TaskStatus.IN_PROGRESS,
         },
         providers={
-            "created_by": current,
-            "last_updated_by": current,
+            "created_by": current_provider,
+            "last_updated_by": current_provider,
             "compatible_with": [Provider.CODEX, Provider.CLAUDE_CODE, Provider.KIMI_CODE],
         },
         context={"repo_root": str(root)},
@@ -274,7 +288,10 @@ def handoff_init(
 
     if target_provider:
         try:
-            handoff.resume.recommended_next_provider = _normalize_provider(target_provider, current)
+            handoff.resume.recommended_next_provider = _normalize_provider(
+                target_provider,
+                current_provider,
+            )
         except ValueError as exc:
             return _err("invalid_target_provider", str(exc))
 
@@ -288,7 +305,7 @@ def handoff_init(
                 "active_json": str(handoff_dir / "active.json"),
                 "active_md": str(handoff_dir / "active.md"),
             },
-            "provider": current.value,
+            "provider": current_provider.value,
         },
         f"Created handoff **{handoff.task.title}** at `{handoff_dir / 'active.json'}`.",
     )
@@ -326,7 +343,7 @@ def handoff_capture(
     handoff_dir = get_handoff_dir(root)
 
     try:
-        current = _normalize_provider(provider)
+        current_provider = _normalize_provider(provider)
     except ValueError as exc:
         return _err("invalid_provider", str(exc))
 
@@ -361,7 +378,7 @@ def handoff_capture(
             return init_result
 
     handoff = load(handoff_dir)
-    handoff.providers.last_updated_by = current
+    handoff.providers.last_updated_by = current_provider
     handoff.bump_updated_at()
 
     # Progress: merge without duplicating exact strings.
@@ -397,8 +414,11 @@ def handoff_capture(
     handoff.workspace.changed_files = changed
 
     # Capabilities.
-    used = [_to_capability_entry(c, current) for c in (capabilities_used or [])]
-    required = [_to_capability_entry(c, current) for c in (required_next_capabilities or [])]
+    used = [_to_capability_entry(c, current_provider) for c in (capabilities_used or [])]
+    required = [
+        _to_capability_entry(c, current_provider)
+        for c in (required_next_capabilities or [])
+    ]
     if used:
         handoff.capabilities.used.extend(used)
     if required:
@@ -431,7 +451,10 @@ def handoff_capture(
         handoff.resume.next_prompt = _redact(next_prompt)
     if target_provider:
         try:
-            handoff.resume.recommended_next_provider = _normalize_provider(target_provider, current)
+            handoff.resume.recommended_next_provider = _normalize_provider(
+                target_provider,
+                current_provider,
+            )
         except ValueError as exc:
             return _err("invalid_target_provider", str(exc))
 

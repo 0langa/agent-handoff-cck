@@ -6,7 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from agent_handoff.mcp_server import mcp
+from agent_handoff.mcp_server import handoff_capture, handoff_init, mcp
+from agent_handoff.store import get_handoff_dir, load
 
 
 def _call(name: str, arguments: dict) -> dict:
@@ -82,7 +83,65 @@ def test_capture_updates_progress_and_history(tmp_path: Path) -> None:
     )
     assert not result["is_error"]
     assert result["json"]["ok"] is True
+    handoff = load(get_handoff_dir(tmp_path))
+    assert handoff.progress.current == []
     assert (tmp_path / ".handoff" / "history").exists()
+
+
+def test_capture_preserves_current_progress_list(tmp_path: Path) -> None:
+    _call(
+        "handoff_init",
+        {"title": "Test", "objective": "Obj", "repo_root": str(tmp_path), "provider": "codex"},
+    )
+    result = _call(
+        "handoff_capture",
+        {
+            "repo_root": str(tmp_path),
+            "provider": "codex",
+            "current": ["reviewing MCP flow"],
+        },
+    )
+    assert not result["is_error"]
+    handoff = load(get_handoff_dir(tmp_path))
+    assert handoff.progress.current == ["reviewing MCP flow"]
+
+
+def test_capture_accepts_plain_json_records(tmp_path: Path) -> None:
+    _call(
+        "handoff_init",
+        {"title": "Test", "objective": "Obj", "repo_root": str(tmp_path), "provider": "codex"},
+    )
+    result = _call(
+        "handoff_capture",
+        {
+            "repo_root": str(tmp_path),
+            "provider": "codex",
+            "commands_run": [{"command": "ruff check", "result": "success"}],
+            "tests_run": [{"command": "pytest", "result": "passed"}],
+            "capabilities_used": [{"id": "shell", "type": "shell"}],
+        },
+    )
+    assert not result["is_error"]
+    assert result["json"]["ok"] is True
+
+
+def test_capture_function_accepts_plain_json_records(tmp_path: Path) -> None:
+    init_result = handoff_init(
+        title="Test",
+        objective="Obj",
+        repo_root=str(tmp_path),
+        provider="codex",
+    )
+    assert not init_result.isError
+
+    result = handoff_capture(
+        repo_root=str(tmp_path),
+        provider="codex",
+        commands_run=[{"command": "ruff check", "result": "success"}],
+        tests_run=[{"command": "pytest", "result": "passed"}],
+        capabilities_used=[{"id": "shell", "type": "shell"}],
+    )
+    assert not result.isError
 
 
 def test_capture_auto_initializes_with_title(tmp_path: Path) -> None:
