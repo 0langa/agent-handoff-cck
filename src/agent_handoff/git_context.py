@@ -14,6 +14,8 @@ def _run_git(args: list[str], cwd: Path | str | None = None) -> tuple[int, str, 
             capture_output=True,
             text=True,
             timeout=30,
+            stdin=subprocess.DEVNULL,
+            close_fds=True,
         )
         return proc.returncode, proc.stdout, proc.stderr
     except FileNotFoundError:
