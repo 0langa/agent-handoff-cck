@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Literal
@@ -9,6 +10,10 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, field_validator
 
 PROVIDERS = {"codex", "claude-code", "kimi-code"}
+
+
+# Aliases that require a known current provider to resolve.
+_CURRENT_PROVIDER_ALIASES = {"same", "same-provider", "new chat", "new codex chat"}
 
 
 class TaskStatus(str, Enum):
@@ -37,9 +42,12 @@ def parse_provider(value: str | Provider | None) -> Provider:
         "claude": "claude-code",
         "claude_code": "claude-code",
         "claudecode": "claude-code",
+        "claude code": "claude-code",
         "kimi": "kimi-code",
         "kimi_code": "kimi-code",
         "kimicode": "kimi-code",
+        "kimi code": "kimi-code",
+        "openai codex": "codex",
         "generic": "unknown",
         "any": "unknown",
     }
@@ -48,6 +56,47 @@ def parse_provider(value: str | Provider | None) -> Provider:
         return Provider(normalized)
     except ValueError:
         return Provider.UNKNOWN
+
+
+def detect_provider() -> Provider:
+    """Detect the current agent provider from environment hints."""
+    env = os.environ.get("AGENT_HANDOFF_PROVIDER", "").lower()
+    if env in PROVIDERS:
+        return Provider(env)
+    if os.environ.get("CODEX_ROOT") or os.environ.get("OPENAI_CODEX"):
+        return Provider.CODEX
+    if os.environ.get("CLAUDE_CODE"):
+        return Provider.CLAUDE_CODE
+    if os.environ.get("KIMI_CODE"):
+        return Provider.KIMI_CODE
+    return Provider.UNKNOWN
+
+
+def normalize_provider(
+    value: str | Provider | None,
+    current: str | Provider | None = None,
+) -> Provider:
+    """Strict provider alias normalization with a clear error on invalid input.
+
+    Supports the aliases required by the chat-native handoff flow, including
+    ``same``, ``same-provider`` and ``new chat`` which resolve to *current*.
+    """
+    if isinstance(value, Provider):
+        return value
+    if not value:
+        return parse_provider(current) if current else Provider.UNKNOWN
+    normalized = str(value).strip().lower()
+    if normalized in _CURRENT_PROVIDER_ALIASES:
+        if current:
+            return parse_provider(current)
+        return Provider.UNKNOWN
+    parsed = parse_provider(normalized)
+    if parsed == Provider.UNKNOWN and normalized not in {"unknown", "generic", "any"}:
+        raise ValueError(
+            f"Unsupported provider '{value}'. Use one of: "
+            "codex, claude-code, kimi-code, unknown (or generic)."
+        )
+    return parsed
 
 
 class CapabilityType(str, Enum):

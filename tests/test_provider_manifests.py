@@ -18,6 +18,7 @@ def test_codex_manifest_valid() -> None:
     assert data["skills"] == "./skills/"
     assert data["commands"] == "./commands/"
     assert data["interface"]["displayName"] == "Agent Handoff"
+    assert data["mcpServers"] == "./.mcp.json"
 
 
 def test_claude_manifest_valid() -> None:
@@ -25,6 +26,7 @@ def test_claude_manifest_valid() -> None:
     assert data["name"] == "agent-handoff"
     assert data["skills"] == "./skills"
     assert data["commands"] == "./commands"
+    assert data["mcpServers"] == "./.mcp.json"
     # Claude Code auto-discovers the default agents/ directory; declaring
     # agents explicitly currently fails `claude plugin validate`.
     assert "agents" not in data
@@ -37,6 +39,8 @@ def test_kimi_manifest_valid() -> None:
     assert "skills" in data
     assert data["commands"] == "./commands/"
     assert data["sessionStart"]["skill"] == "agent-handoff"
+    assert "mcpServers" in data
+    assert "agent-handoff" in data["mcpServers"]
     # Kimi Code plugin manifest ignores unsupported runtime fields such as
     # `tools`, `apps`, `inject`, and `configFile`.
     assert "tools" not in data

@@ -5,23 +5,22 @@ description: Mark task complete and archive.
 
 # Agent Handoff: close
 
-Mark the task complete and archive the active handoff by running the CLI from the repository root.
+Mark the task complete and archive the handoff.
 
-Use the arguments supplied after the slash command as CLI arguments:
+## Chat-native behavior
+
+Call the MCP tool `handoff_close`.
+
+Agent behavior:
+
+1. Only close when the task is finished or the user explicitly asks.
+2. Optionally pass a final `summary`.
+3. Report the archive path under `.handoff/history/`.
+
+## CLI fallback
+
+If MCP is unavailable, run from the repository root:
 
 ```text
-agent-handoff close $ARGUMENTS
+agent-handoff close --provider codex
 ```
-
-If `agent-handoff` is not on PATH and this is the plugin source checkout, use:
-
-```text
-uv run agent-handoff close $ARGUMENTS
-```
-
-Only close the handoff when the user has finished the task or explicitly asks to close it.
-
-- Sets status to `complete`.
-- Adds final history snapshot.
-- Removes `.handoff/active.json` and `.handoff/active.md`.
-- Leaves external memory sync to a future integration.

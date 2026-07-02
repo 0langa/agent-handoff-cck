@@ -5,24 +5,23 @@ description: Continue from latest handoff.
 
 # Agent Handoff: resume
 
-Continue from the latest handoff by running the CLI from the repository root and then following the printed continuation context.
+Continue from the latest handoff.
 
-Use the arguments supplied after the slash command as CLI arguments:
+## Chat-native behavior
+
+Call the MCP tool `handoff_resume`.
+
+Agent behavior:
+
+1. Load and validate `.handoff/active.json`.
+2. Read the returned continuation summary and `.handoff/active.md`.
+3. Respect capability warnings; if a required capability is blocked, stop and ask the user.
+4. Continue from the recorded next steps.
+
+## CLI fallback
+
+If MCP is unavailable, run from the repository root:
 
 ```text
-agent-handoff resume $ARGUMENTS
+agent-handoff resume --provider claude-code
 ```
-
-If `agent-handoff` is not on PATH and this is the plugin source checkout, use:
-
-```text
-uv run agent-handoff resume $ARGUMENTS
-```
-
-If capability warnings are printed, respect the fallback instructions before continuing.
-
-- Reads `.handoff/active.json`.
-- Validates schema.
-- Checks current provider against required capabilities.
-- Prints continuation summary from `.handoff/active.md`.
-- Stops if a required capability is blocked and no fallback exists.

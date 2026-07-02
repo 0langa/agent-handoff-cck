@@ -5,27 +5,30 @@ description: Generate continuation prompt for target provider.
 
 # Agent Handoff: export
 
-Generate a continuation prompt for a target provider by running the CLI from the repository root.
+Generate a continuation prompt for a target provider.
 
-Use the arguments supplied after the slash command as CLI arguments:
+## Chat-native behavior
+
+Call the MCP tool `handoff_export` with `target_provider`.
+
+Supported targets:
+
+- `codex`
+- `claude-code`
+- `kimi-code`
+- `generic` / `unknown`
+
+Agent behavior:
+
+1. Confirm the target provider if not supplied.
+2. Call `handoff_export`.
+3. Show the export path and a short preview.
+4. Tell the user how to use the export in the target agent.
+
+## CLI fallback
+
+If MCP is unavailable, run from the repository root:
 
 ```text
-agent-handoff export $ARGUMENTS
+agent-handoff export claude-code
 ```
-
-If `agent-handoff` is not on PATH and this is the plugin source checkout, use:
-
-```text
-uv run agent-handoff export $ARGUMENTS
-```
-
-If no target is supplied, ask which target to export: `codex`, `claude-code`, `kimi-code`, or `generic`.
-
-- `.handoff/exports/codex.md`
-- `.handoff/exports/claude-code.md`
-- `.handoff/exports/kimi-code.md`
-- `.handoff/exports/unknown.md` (for generic)
-
-## Content
-
-Each export includes role-specific instructions, objective, status, next actions, capability warnings, safety constraints, file paths, and tests run.

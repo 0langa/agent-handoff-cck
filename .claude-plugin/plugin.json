@@ -1,6 +1,6 @@
 {
   "name": "agent-handoff",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Provider-neutral handoff records for Claude Code, Codex, and Kimi Code.",
   "author": {
     "name": "0langa"
@@ -16,5 +16,6 @@
     "kimi-code"
   ],
   "skills": "./skills",
-  "commands": "./commands"
+  "commands": "./commands",
+  "mcpServers": "./.mcp.json"
 }

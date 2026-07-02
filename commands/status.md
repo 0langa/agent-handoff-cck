@@ -5,24 +5,25 @@ description: Show current handoff status.
 
 # Agent Handoff: status
 
-Show current handoff status by running the CLI from the repository root.
+Show current handoff status.
 
-Use the arguments supplied after the slash command as CLI arguments:
+## Chat-native behavior
+
+Call the MCP tool `handoff_status`.
+
+Report:
+
+- Whether an active handoff exists.
+- Title and status.
+- Created/last-updated provider.
+- Updated timestamp.
+- Number of next steps and blockers.
+- Paths to `.handoff/active.json` and `.handoff/active.md`.
+
+## CLI fallback
+
+If MCP is unavailable, run from the repository root:
 
 ```text
-agent-handoff status $ARGUMENTS
+agent-handoff status
 ```
-
-If `agent-handoff` is not on PATH and this is the plugin source checkout, use:
-
-```text
-uv run agent-handoff status $ARGUMENTS
-```
-
-Report the CLI output directly and summarize only if the user asked for a summary.
-
-- Title
-- Status
-- Created/updated by
-- Updated at
-- Number of next steps and blockers

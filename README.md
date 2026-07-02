@@ -1,10 +1,12 @@
-# Agent Handoff (`agent-handoff-cck`)
+# Agent Handoff (`agent-handoff`)
 
 Cross-agent handoff plugin for Codex, Claude Code, and Kimi Code.
 
 ## Goal
 
 Let any of the three agents continue work started by another without losing task state, safety context, capability requirements, or next actions.
+
+Agent Handoff is a **chat-native plugin** with MCP tools. Natural-language requests like "handoff this session to Kimi" or "verify this handoff before switching agents" should activate the skill and use the tools directly. The CLI remains available as a fallback.
 
 ## Install
 
@@ -14,7 +16,40 @@ pip install -e .
 uv pip install -e .
 ```
 
-## CLI
+For Kimi Code, install the plugin from a local path:
+
+```text
+/plugins install C:\Users\...\agent-handoff-cck
+```
+
+Then run `/reload` or start a new session.
+
+## Chat-native usage
+
+After the plugin is loaded, ask for a handoff in plain language:
+
+```text
+handoff this session to kimi now
+handoff this task to claude code
+make a codex handoff for a new chat
+resume the latest handoff
+verify this handoff before I switch agents
+checkpoint this task before I switch agents
+```
+
+The skill will route these requests to the MCP tools:
+
+- `handoff_init`
+- `handoff_capture`
+- `handoff_status`
+- `handoff_resume`
+- `handoff_verify`
+- `handoff_export`
+- `handoff_close`
+
+Same-provider handoff is supported, including Codex to Codex for a new chat.
+
+## CLI fallback
 
 ```bash
 agent-handoff init --title "Fix auth" --objective "Resolve token expiry" --provider codex
@@ -36,7 +71,7 @@ You can also run via `python -m agent_handoff` or `uv run agent-handoff`.
 | Claude Code | `.claude-plugin/plugin.json` |
 | Kimi Code   | `kimi.plugin.json`           |
 
-All three manifests share the same plugin name and version. Codex and Kimi use explicit skill/command paths; Claude Code validates explicit `skills` and `commands` paths and auto-discovers the default `agents/` directory.
+All three manifests share the same plugin name and version and declare the bundled MCP server.
 
 ## Provider Workflows
 
@@ -48,14 +83,6 @@ Install the plugin from the Codex plugin UI by pointing it at this local reposit
 @agent-handoff capture current task
 @agent-handoff resume latest handoff
 @agent-handoff export claude-code
-```
-
-Or directly via CLI:
-
-```bash
-agent-handoff init --title "..." --objective "..." --provider codex
-agent-handoff capture --provider codex --done "step A" --next "step B"
-agent-handoff export claude-code
 ```
 
 Codex-specific: record provider-bound connectors (Gmail, GitHub) as capabilities with fallback entries so Claude/Kimi know what they cannot rerun.
@@ -72,15 +99,7 @@ Install the plugin from a local path. Slash commands become available when the c
 /handoff:export codex
 /handoff:resume
 /handoff:close
-```
-
-Or directly via CLI:
-
-```bash
-agent-handoff init --title "..." --objective "..." --provider claude-code
-agent-handoff capture --provider claude-code
-agent-handoff verify --provider claude-code
-agent-handoff export codex
+/handoff kimi
 ```
 
 Claude Code agents (`handoff-verifier`, `handoff-summarizer`) are available through the default `agents/` directory discovery.
@@ -103,14 +122,7 @@ After installation and `/reload`, commands are namespaced:
 /agent-handoff:export codex
 /agent-handoff:resume
 /agent-handoff:close
-```
-
-Or directly via CLI:
-
-```bash
-agent-handoff init --title "..." --objective "..." --provider kimi-code
-agent-handoff capture --provider kimi-code
-agent-handoff export claude-code
+/agent-handoff:handoff kimi
 ```
 
 ## Files Produced
@@ -165,6 +177,10 @@ When a capability is provider-bound (e.g., Codex Gmail connector), record a fall
 uv sync --extra dev
 uv run pytest
 ```
+
+## Version
+
+Current version: `0.2.0`.
 
 ## License
 
