@@ -1,6 +1,6 @@
 {
   "name": "agent-handoff",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Provider-neutral handoff records for Kimi Code, Codex, and Claude Code.",
   "keywords": [
     "handoff",
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/0langa/agent-handoff-cck",
   "license": "MIT",
   "interface": {
-    "displayName": "Agent Continuity",
+    "displayName": "Agent Handoff",
     "shortDescription": "Capture and resume cross-agent handoffs.",
     "longDescription": "Provider-neutral handoff records for Kimi Code, Codex, and Claude Code.",
     "developerName": "0langa",
@@ -26,5 +26,5 @@
   "sessionStart": {
     "skill": "agent-handoff"
   },
-  "skillInstructions": "Use Agent Continuity when the user wants to capture, verify, export, or resume a cross-agent handoff. Keep the .handoff artifact provider-neutral and record capability fallbacks when a tool is provider-bound."
+  "skillInstructions": "Use Agent Handoff when the user wants to capture, verify, export, or resume a cross-agent handoff. Keep the .handoff artifact provider-neutral and record capability fallbacks when a tool is provider-bound."
 }

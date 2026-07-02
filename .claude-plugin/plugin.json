@@ -1,6 +1,6 @@
 {
   "name": "agent-handoff",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Provider-neutral handoff records for Claude Code, Codex, and Kimi Code.",
   "author": {
     "name": "0langa"

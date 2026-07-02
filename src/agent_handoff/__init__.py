@@ -1,3 +1,3 @@
-"""Agent Continuity / agent-handoff cross-agent handoff plugin."""
+"""Agent Handoff / agent-handoff cross-agent handoff plugin."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"

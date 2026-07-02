@@ -17,7 +17,7 @@ def test_codex_manifest_valid() -> None:
     assert data["name"] == "agent-handoff"
     assert data["skills"] == "./skills/"
     assert data["commands"] == "./commands/"
-    assert data["interface"]["displayName"] == "Agent Continuity"
+    assert data["interface"]["displayName"] == "Agent Handoff"
 
 
 def test_claude_manifest_valid() -> None:

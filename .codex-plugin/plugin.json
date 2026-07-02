@@ -1,6 +1,6 @@
 {
   "name": "agent-handoff",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Provider-neutral handoff records for Codex, Claude Code, and Kimi Code.",
   "author": {
     "name": "0langa"
@@ -18,9 +18,9 @@
   "skills": "./skills/",
   "commands": "./commands/",
   "interface": {
-    "displayName": "Agent Continuity",
+    "displayName": "Agent Handoff",
     "shortDescription": "Capture and resume cross-agent handoffs.",
-    "longDescription": "Agent Continuity writes provider-neutral handoff artifacts so Codex, Claude Code, and Kimi Code can continue one another's work without losing task state, safety context, capability requirements, or next actions.",
+    "longDescription": "Agent Handoff writes provider-neutral handoff artifacts so Codex, Claude Code, and Kimi Code can continue one another's work without losing task state, safety context, capability requirements, or next actions.",
     "developerName": "0langa",
     "category": "Productivity",
     "capabilities": [

@@ -3,7 +3,7 @@ name: agent-handoff
 description: Capture and resume cross-agent handoffs between Codex, Claude Code, and Kimi Code.
 ---
 
-# Agent Continuity / agent-handoff
+# Agent Handoff / agent-handoff
 
 Capture and resume cross-agent handoffs between Codex, Claude Code, and Kimi Code.
 
