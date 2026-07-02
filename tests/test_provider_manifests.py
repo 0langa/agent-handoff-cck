@@ -18,7 +18,7 @@ def test_codex_manifest_valid() -> None:
     assert data["skills"] == "./skills/"
     assert data["commands"] == "./commands/"
     assert data["interface"]["displayName"] == "Agent Handoff"
-    assert data["mcpServers"] == "./.mcp.json"
+    assert data["mcpServers"] == "./.codex-mcp.json"
 
 
 def test_claude_manifest_valid() -> None:
@@ -55,3 +55,17 @@ def test_all_manifests_share_id_and_version() -> None:
     kimi = _load_manifest("kimi.plugin.json")
     assert codex["name"] == claude["name"] == kimi["name"]
     assert codex["version"] == claude["version"] == kimi["version"]
+
+
+def test_codex_mcp_manifest_uses_codex_shape() -> None:
+    data = _load_manifest(".codex-mcp.json")
+    assert "agent-handoff" in data
+    assert "mcpServers" not in data
+    assert data["agent-handoff"]["command"] == "uv"
+
+
+def test_claude_mcp_manifest_uses_plugin_root() -> None:
+    data = _load_manifest(".mcp.json")
+    server = data["mcpServers"]["agent-handoff"]
+    assert "${CLAUDE_PLUGIN_ROOT}" in server["args"]
+    assert "cwd" not in server

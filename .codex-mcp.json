@@ -1,0 +1,12 @@
+{
+  "agent-handoff": {
+    "command": "uv",
+    "args": [
+      "run",
+      "python",
+      "-m",
+      "agent_handoff.mcp_server"
+    ],
+    "cwd": "."
+  }
+}

@@ -37,5 +37,5 @@
       "Verify this handoff before switching agents."
     ]
   },
-  "mcpServers": "./.mcp.json"
+  "mcpServers": "./.codex-mcp.json"
 }

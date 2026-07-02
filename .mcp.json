@@ -4,11 +4,12 @@
       "command": "uv",
       "args": [
         "run",
+        "--project",
+        "${CLAUDE_PLUGIN_ROOT}",
         "python",
         "-m",
         "agent_handoff.mcp_server"
-      ],
-      "cwd": "./"
+      ]
     }
   }
 }
