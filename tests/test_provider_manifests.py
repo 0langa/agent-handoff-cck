@@ -15,17 +15,20 @@ def _load_manifest(name: str) -> dict:
 def test_codex_manifest_valid() -> None:
     data = _load_manifest(".codex-plugin/plugin.json")
     assert data["name"] == "agent-handoff"
-    assert "skills" in data
+    assert data["skills"] == "./skills/"
+    assert data["commands"] == "./commands/"
+    assert data["interface"]["displayName"] == "Agent Continuity"
 
 
 def test_claude_manifest_valid() -> None:
     data = _load_manifest(".claude-plugin/plugin.json")
     assert data["name"] == "agent-handoff"
-    # Claude Code auto-discovers skills/commands/agents from directory structure;
-    # plugin.json should stay minimal.
-    assert "skills" not in data
-    assert "commands" not in data
+    assert data["skills"] == "./skills"
+    assert data["commands"] == "./commands"
+    # Claude Code auto-discovers the default agents/ directory; declaring
+    # agents explicitly currently fails `claude plugin validate`.
     assert "agents" not in data
+    assert "interface" not in data
 
 
 def test_kimi_manifest_valid() -> None:

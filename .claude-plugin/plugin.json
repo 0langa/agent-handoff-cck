@@ -14,5 +14,7 @@
     "codex",
     "claude-code",
     "kimi-code"
-  ]
+  ],
+  "skills": "./skills",
+  "commands": "./commands"
 }

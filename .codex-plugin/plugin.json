@@ -16,6 +16,7 @@
     "kimi-code"
   ],
   "skills": "./skills/",
+  "commands": "./commands/",
   "interface": {
     "displayName": "Agent Continuity",
     "shortDescription": "Capture and resume cross-agent handoffs.",

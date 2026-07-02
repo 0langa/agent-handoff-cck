@@ -33,5 +33,9 @@ build/
 # Handoff runtime data
 .handoff/
 
+# RECALL runtime data
+.recall/
+.codex_memory/
+
 # Logs
 *.log
