@@ -28,6 +28,8 @@ Trigger words: `kimi`, `kimi-code`, `kimi code`, `claude`, `claude-code`, `claud
 
 Prefer the Agent Handoff **MCP tools**. Do not tell the user to run CLI commands unless MCP is unavailable or the user explicitly asks for the terminal fallback.
 
+Always pass `repo_root` explicitly to every MCP tool call. Use the active workspace/repository root, not the plugin installation directory. This is required because some hosts launch plugin MCP servers from a managed plugin directory.
+
 ## Available MCP tools
 
 - `handoff_init` — create `.handoff/active.json` and `.handoff/active.md`.
@@ -45,25 +47,25 @@ Tool names may be namespaced by the host, e.g. `mcp__agent-handoff__handoff_capt
 ### Hand off to another provider
 
 1. Summarize the current session in your own words.
-2. Call `handoff_capture` with `target_provider` set to the inferred target.
-3. Call `handoff_verify` (use `strict=true` if switching providers).
-4. Call `handoff_export` with the same `target_provider`.
+2. Call `handoff_capture` with `repo_root` and `target_provider` set to the inferred target.
+3. Call `handoff_verify` with `repo_root` (use `strict=true` if switching providers).
+4. Call `handoff_export` with `repo_root` and the same `target_provider`.
 5. Tell the user the export path and the next step (open the target agent and paste/run the export).
 
 ### Resume the latest handoff
 
-1. Call `handoff_resume`.
+1. Call `handoff_resume` with `repo_root`.
 2. Read the returned continuation summary and `active.md`.
 3. Continue from the next steps, respecting capability warnings and safety notes.
 
 ### Check status
 
-1. Call `handoff_status`.
+1. Call `handoff_status` with `repo_root`.
 2. Report title, status, next-step count, and blocker count.
 
 ### Close
 
-1. Call `handoff_close` when the task is finished.
+1. Call `handoff_close` with `repo_root` when the task is finished.
 2. Report the archive path.
 
 ## Provider aliases

@@ -9,7 +9,9 @@ Verify handoff quality before switching providers or chats.
 
 ## Chat-native behavior
 
-Call the MCP tool `handoff_verify`.
+Call the MCP tool `handoff_verify` with `repo_root`.
+
+Always pass `repo_root` explicitly. Use the active workspace/repository root, not the plugin installation directory.
 
 Agent behavior:
 

@@ -9,7 +9,9 @@ Mark the task complete and archive the handoff.
 
 ## Chat-native behavior
 
-Call the MCP tool `handoff_close`.
+Call the MCP tool `handoff_close` with `repo_root`.
+
+Always pass `repo_root` explicitly. Use the active workspace/repository root, not the plugin installation directory.
 
 Agent behavior:
 

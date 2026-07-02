@@ -45,8 +45,16 @@ def test_skill_prefers_mcp_over_cli(skill_text: str) -> None:
     assert "Do not tell the user to run CLI commands" in skill_text
 
 
+def test_skill_requires_explicit_repo_root(skill_text: str) -> None:
+    assert "Always pass `repo_root` explicitly" in skill_text
+    assert "not the plugin installation directory" in skill_text
+
+
 def test_commands_prefer_mcp() -> None:
     for path in COMMANDS_DIR.glob("*.md"):
         text = path.read_text(encoding="utf-8")
         assert "## Chat-native behavior" in text, f"{path.name} missing chat-native section"
         assert "MCP" in text, f"{path.name} does not mention MCP"
+        assert "Always pass `repo_root` explicitly" in text, (
+            f"{path.name} does not require explicit repo_root"
+        )

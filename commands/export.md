@@ -9,7 +9,9 @@ Generate a continuation prompt for a target provider.
 
 ## Chat-native behavior
 
-Call the MCP tool `handoff_export` with `target_provider`.
+Call the MCP tool `handoff_export` with `repo_root` and `target_provider`.
+
+Always pass `repo_root` explicitly. Use the active workspace/repository root, not the plugin installation directory.
 
 Supported targets:
 

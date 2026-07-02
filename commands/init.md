@@ -9,13 +9,15 @@ Create a new handoff record.
 
 ## Chat-native behavior
 
+Always pass `repo_root` explicitly. Use the active workspace/repository root, not the plugin installation directory.
+
 Call the MCP tool `handoff_init` with:
 
 - `title` (required)
 - `objective` (optional)
 - `target_provider` (optional: codex, claude-code, kimi-code, generic)
 - `provider` (optional, defaults to auto-detected current provider)
-- `repo_root` (optional, defaults to current working directory)
+- `repo_root` (required in agent use; active workspace/repository root)
 
 Do not overwrite an existing active handoff unless `force=true`.
 

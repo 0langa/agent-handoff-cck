@@ -9,7 +9,9 @@ Continue from the latest handoff.
 
 ## Chat-native behavior
 
-Call the MCP tool `handoff_resume`.
+Call the MCP tool `handoff_resume` with `repo_root`.
+
+Always pass `repo_root` explicitly. Use the active workspace/repository root, not the plugin installation directory.
 
 Agent behavior:
 

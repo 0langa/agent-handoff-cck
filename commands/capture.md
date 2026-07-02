@@ -11,6 +11,8 @@ Update the active handoff from the current chat/session summary.
 
 Call the MCP tool `handoff_capture`.
 
+Always pass `repo_root` explicitly. Use the active workspace/repository root, not the plugin installation directory.
+
 Agent behavior:
 
 1. Summarize what was done, what is in progress, and the next steps.
