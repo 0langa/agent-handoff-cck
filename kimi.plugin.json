@@ -1,6 +1,6 @@
 {
   "name": "agent-handoff",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Provider-neutral handoff records for Kimi Code, Codex, and Claude Code.",
   "keywords": [
     "handoff",
@@ -32,11 +32,12 @@
       "command": "uv",
       "args": [
         "run",
+        "--project",
+        "${CLAUDE_PLUGIN_ROOT}",
         "python",
         "-m",
         "agent_handoff.mcp_server"
-      ],
-      "cwd": "./"
+      ]
     }
   }
 }
