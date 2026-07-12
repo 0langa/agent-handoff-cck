@@ -1,6 +1,6 @@
 {
   "name": "agent-handoff",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Provider-neutral handoff records for Codex, Claude Code, and Kimi Code.",
   "author": {
     "name": "0langa"
@@ -31,10 +31,16 @@
     "websiteURL": "https://github.com/0langa/agent-handoff-cck",
     "privacyPolicyURL": "https://github.com/0langa/agent-handoff-cck/blob/main/README.md",
     "termsOfServiceURL": "https://github.com/0langa/agent-handoff-cck/blob/main/LICENSE",
+    "brandColor": "#2F7BFF",
     "defaultPrompt": [
       "Create a handoff for this task.",
       "Resume from the latest handoff.",
       "Verify this handoff before switching agents."
+    ],
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.png",
+    "screenshots": [
+      "./assets/screenshot-1.png"
     ]
   },
   "mcpServers": "./.codex-mcp.json"
