@@ -5,9 +5,8 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
 from mcp.client.session import ClientSession
-from mcp.client.stdio import stdio_client, StdioServerParameters
+from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from agent_handoff.mcp_server import handoff_capture, handoff_init, mcp
 from agent_handoff.store import get_handoff_dir, load
@@ -255,29 +254,28 @@ def test_capture_returns_over_real_stdio(tmp_path: Path) -> None:
             cwd=str(repo_root),
             env={"PYTHONPATH": str(repo_root / "src")},
         )
-        async with stdio_client(params) as (read, write):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
-                await session.call_tool(
-                    "handoff_init",
+        async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
+            await session.initialize()
+            await session.call_tool(
+                "handoff_init",
+                {
+                    "repo_root": str(tmp_path),
+                    "provider": "codex",
+                    "title": "stdio test",
+                    "objective": "regression",
+                },
+            )
+            result = await asyncio.wait_for(
+                session.call_tool(
+                    "handoff_capture",
                     {
                         "repo_root": str(tmp_path),
                         "provider": "codex",
-                        "title": "stdio test",
-                        "objective": "regression",
+                        "summary": "capture over stdio",
                     },
-                )
-                result = await asyncio.wait_for(
-                    session.call_tool(
-                        "handoff_capture",
-                        {
-                            "repo_root": str(tmp_path),
-                            "provider": "codex",
-                            "summary": "capture over stdio",
-                        },
-                    ),
-                    timeout=15,
-                )
+                ),
+                timeout=15,
+            )
         assert not result.isError
         payload = json.loads(result.content[0].text)
         assert payload["ok"] is True

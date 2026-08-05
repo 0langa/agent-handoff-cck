@@ -1,9 +1,10 @@
 """Tests for provider plugin manifest validity."""
 
 import json
+import re
 from pathlib import Path
 
-import pytest
+from agent_handoff import __version__
 
 
 def _load_manifest(name: str) -> dict:
@@ -55,6 +56,20 @@ def test_all_manifests_share_id_and_version() -> None:
     kimi = _load_manifest("kimi.plugin.json")
     assert codex["name"] == claude["name"] == kimi["name"]
     assert codex["version"] == claude["version"] == kimi["version"]
+
+
+def test_runtime_version_matches_project_and_provider_manifests() -> None:
+    root = Path(__file__).parent.parent
+    project = (root / "pyproject.toml").read_text(encoding="utf-8")
+    match = re.search(r'^version\s*=\s*"([^"]+)"$', project, re.MULTILINE)
+    assert match is not None
+
+    expected = match.group(1)
+    assert __version__ == expected
+    assert all(
+        _load_manifest(path)["version"] == expected
+        for path in (".codex-plugin/plugin.json", ".claude-plugin/plugin.json", "kimi.plugin.json")
+    )
 
 
 def test_codex_mcp_manifest_uses_codex_shape() -> None:

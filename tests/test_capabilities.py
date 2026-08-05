@@ -1,9 +1,7 @@
 """Tests for capability model."""
 
-import pytest
 
 from agent_handoff.capabilities import (
-    CAPABILITY_MATRIX,
     check_missing_capabilities,
     make_capability,
     supported_by,

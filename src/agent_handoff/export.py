@@ -18,7 +18,7 @@ def export_to(
     target: str,
     handoff_dir: Path | None = None,
 ) -> Path:
-    from .store import get_handoff_dir, ensure_handoff_dirs
+    from .store import ensure_handoff_dirs, get_handoff_dir
 
     hd = handoff_dir or get_handoff_dir()
     ensure_handoff_dirs(hd)

@@ -23,9 +23,8 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 from mcp.types import CallToolResult, TextContent
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from . import __version__
 from .capabilities import check_missing_capabilities
 from .export import export_to
 from .git_context import changed_files, git_status, is_git_repo

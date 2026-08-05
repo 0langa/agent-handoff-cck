@@ -17,18 +17,14 @@ from .privacy import safe_changed_files, safe_git_status
 from .render import render_active
 from .schema import (
     CapabilityEntry,
-    CapabilityType,
-    CommandResult,
     CommandRecord,
-    ContextBlock,
+    CommandResult,
     FallbackType,
     HandoffSchema,
     ProgressBlock,
-    Provider,
-    SafetyBlock,
     TaskStatus,
-    TestResult,
     TestRecord,
+    TestResult,
     WorkspaceBlock,
     parse_provider,
 )

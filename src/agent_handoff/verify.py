@@ -41,9 +41,12 @@ def verify(
     if not handoff.task.status:
         result.fail("task.status missing")
 
-    if handoff.task.status == TaskStatus.IN_PROGRESS:
-        if not handoff.progress.next and not handoff.resume.next_prompt:
-            result.fail("in-progress handoff has no next actions or resume prompt")
+    if (
+        handoff.task.status == TaskStatus.IN_PROGRESS
+        and not handoff.progress.next
+        and not handoff.resume.next_prompt
+    ):
+        result.fail("in-progress handoff has no next actions or resume prompt")
 
     # Progress checks.
     if not handoff.progress.done and not handoff.progress.current:
@@ -92,7 +95,7 @@ def verify(
             current_status = git_status(repo_root)
             if current_status != (handoff.workspace.git_status or ""):
                 result.warn("workspace git status differs from captured status")
-        except Exception:
-            pass
+        except OSError:
+            result.warn("unable to compare workspace git status")
 
     return result

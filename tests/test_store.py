@@ -2,10 +2,8 @@
 
 from pathlib import Path
 
-import pytest
-
-from agent_handoff.schema import HandoffSchema, Provider, TaskStatus
 from agent_handoff import store
+from agent_handoff.schema import HandoffSchema
 
 
 def test_save_and_load(tmp_path: Path) -> None:

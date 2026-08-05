@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 SENSITIVE_FILENAME_PATTERNS = (
     ".env",

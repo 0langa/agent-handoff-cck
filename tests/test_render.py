@@ -2,11 +2,9 @@
 
 from pathlib import Path
 
-import pytest
-
+from agent_handoff.export import export_to
 from agent_handoff.render import render_active, render_export
 from agent_handoff.schema import HandoffSchema, Provider
-from agent_handoff.export import export_to
 
 
 def test_render_active_includes_title() -> None:

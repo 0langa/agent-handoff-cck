@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from agent_handoff.schema import (
     CapabilityEntry,
     CapabilityType,
