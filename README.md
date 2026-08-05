@@ -24,9 +24,10 @@ For Kimi Code, install the plugin from a local path:
 
 Then run `/reload` or start a new session.
 
-On Windows, Kimi's MCP launcher resolves `uv` from
-`%USERPROFILE%\\.local\\bin\\uv.exe` first, then `PATH`. Install `uv` before
-enabling this plugin's MCP server.
+On Windows, Kimi's MCP launcher resolves `uv` from its standard user install
+location first, then `PATH`. It isolates its project environment in Kimi's
+cache, so a stale managed-copy `.venv` link cannot block startup. Install
+`uv` before enabling this plugin's MCP server.
 
 ## Chat-native usage
 
@@ -184,7 +185,7 @@ uv run pytest
 
 ## Version
 
-Current version: `0.2.4`.
+Current version: `0.2.5`.
 
 ## License
 

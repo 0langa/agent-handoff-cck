@@ -278,7 +278,7 @@ def resume(repo_root: str, provider: str) -> None:
         click.echo(render_active(handoff))
 
 
-@main.command()
+@main.command("verify")
 @click.option("--repo-root", default=".", help="Repository root.")
 @click.option("--provider", default=lambda: _detect_provider(), help="Current provider.")
 @click.option("--strict/--no-strict", default=False, help="Treat warnings as failures.")

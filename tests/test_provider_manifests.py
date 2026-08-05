@@ -54,7 +54,14 @@ def test_kimi_manifest_valid() -> None:
     ]
     launcher = Path(__file__).parent.parent / "scripts" / "kimi-uv-mcp.cmd"
     assert launcher.exists()
-    assert "%USERPROFILE%\\.local\\bin\\uv.exe" in launcher.read_text(encoding="utf-8")
+    launcher_text = launcher.read_text(encoding="utf-8")
+    assert "%USERPROFILE%\\.local\\bin\\uv.exe" in launcher_text
+    assert 'set "KIMI_RUNTIME_HOME=%KIMI_CODE_HOME%"' in launcher_text
+    assert 'set "KIMI_RUNTIME_HOME=%USERPROFILE%\\.kimi-code"' in launcher_text
+    assert (
+        'set "UV_PROJECT_ENVIRONMENT=%KIMI_RUNTIME_HOME%\\cache\\uv-projects\\agent-handoff"'
+        in launcher_text
+    )
     # Kimi Code plugin manifest ignores unsupported runtime fields such as
     # `tools`, `apps`, `inject`, and `configFile`.
     assert "tools" not in data

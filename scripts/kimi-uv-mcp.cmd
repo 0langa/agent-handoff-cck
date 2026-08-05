@@ -9,4 +9,7 @@ if not defined UV_EXE (
   exit /b 9009
 )
 :run
+set "KIMI_RUNTIME_HOME=%KIMI_CODE_HOME%"
+if not defined KIMI_RUNTIME_HOME set "KIMI_RUNTIME_HOME=%USERPROFILE%\.kimi-code"
+set "UV_PROJECT_ENVIRONMENT=%KIMI_RUNTIME_HOME%\cache\uv-projects\agent-handoff"
 "%UV_EXE%" run --project "%~dp0.." python %*
