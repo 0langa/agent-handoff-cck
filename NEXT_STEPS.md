@@ -34,9 +34,8 @@ What works:
 
 Gaps and loose ends:
 
-- **Release metadata is aligned at 0.2.2**: `pyproject.toml`, the runtime package, README, and
-  all three provider manifests agree; tags `v0.2.1` and `v0.2.2` exist. The manifest test now
-  guards this agreement.
+- **Release metadata is aligned at 0.2.3**: `pyproject.toml`, the runtime package, README, and
+  all three provider manifests agree. The manifest test guards this agreement.
 - The marketplace rollout in the plan's Done Definition (updating the
   `0langas-plugin-marketplace` submodule and metadata to 0.2.x) is not verifiable from this
   repo and is presumably outstanding.
@@ -45,7 +44,7 @@ Gaps and loose ends:
 
 ## Definition of "finished"
 
-The version-and-tag baseline is met at `v0.2.2`, and CI defines the local compile, lint, and pytest
+The version-and-tag baseline is met at `v0.2.3`, and CI defines the local compile, lint, and pytest
 gates. The marketplace submodule and metadata must match the tagged version and installs must be
 refreshed on all three providers. Every acceptance and smoke
 check in `DEVELOPMENT_PLAN.md` — chat-native prompts such as "handoff this session to kimi now"
