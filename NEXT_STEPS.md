@@ -34,17 +34,16 @@ What works:
 
 Gaps and loose ends:
 
-- **Release metadata is aligned at 0.2.3**: `pyproject.toml`, the runtime package, README, and
+- **Release metadata is aligned at 0.2.4**: `pyproject.toml`, the runtime package, README, and
   all three provider manifests agree. The manifest test guards this agreement.
-- The marketplace rollout in the plan's Done Definition (updating the
-  `0langas-plugin-marketplace` submodule and metadata to 0.2.x) is not verifiable from this
-  repo and is presumably outstanding.
+- Kimi's generated Windows launcher now resolves `uv` from its standard user install path before
+  falling back to `PATH`; this avoids Kimi's inherited-PATH launch failure.
 - The CI workflow defines compile, Ruff, and pytest gates on Windows and Linux. The README documents Kimi's
   `/agent-handoff:*` namespace separately from Claude's `/handoff:*` commands.
 
 ## Definition of "finished"
 
-The version-and-tag baseline is met at `v0.2.3`, and CI defines the local compile, lint, and pytest
+The version-and-tag baseline is met at `v0.2.4`, and CI defines the local compile, lint, and pytest
 gates. The marketplace submodule and metadata must match the tagged version and installs must be
 refreshed on all three providers. Every acceptance and smoke
 check in `DEVELOPMENT_PLAN.md` — chat-native prompts such as "handoff this session to kimi now"

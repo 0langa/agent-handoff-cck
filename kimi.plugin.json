@@ -1,6 +1,6 @@
 {
   "name": "agent-handoff",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Provider-neutral handoff records for Kimi Code, Codex, and Claude Code.",
   "keywords": [
     "handoff",
@@ -29,15 +29,16 @@
   "skillInstructions": "Use Agent Handoff when the user wants to capture, verify, export, or resume a cross-agent handoff. Keep the .handoff artifact provider-neutral and record capability fallbacks when a tool is provider-bound.",
   "mcpServers": {
     "agent-handoff": {
-      "command": "uv",
+      "command": "cmd.exe",
       "args": [
-        "run",
-        "--project",
-        "${CLAUDE_PLUGIN_ROOT}",
-        "python",
+        "/d",
+        "/s",
+        "/c",
+        "scripts\\kimi-uv-mcp.cmd",
         "-m",
         "agent_handoff.mcp_server"
-      ]
+      ],
+      "cwd": "./"
     }
   }
 }

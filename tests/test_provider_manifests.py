@@ -41,7 +41,20 @@ def test_kimi_manifest_valid() -> None:
     assert data["commands"] == "./commands/"
     assert data["sessionStart"]["skill"] == "agent-handoff"
     assert "mcpServers" in data
-    assert "agent-handoff" in data["mcpServers"]
+    server = data["mcpServers"]["agent-handoff"]
+    assert server["command"] == "cmd.exe"
+    assert server["cwd"] == "./"
+    assert server["args"] == [
+        "/d",
+        "/s",
+        "/c",
+        "scripts\\kimi-uv-mcp.cmd",
+        "-m",
+        "agent_handoff.mcp_server",
+    ]
+    launcher = Path(__file__).parent.parent / "scripts" / "kimi-uv-mcp.cmd"
+    assert launcher.exists()
+    assert "%USERPROFILE%\\.local\\bin\\uv.exe" in launcher.read_text(encoding="utf-8")
     # Kimi Code plugin manifest ignores unsupported runtime fields such as
     # `tools`, `apps`, `inject`, and `configFile`.
     assert "tools" not in data
