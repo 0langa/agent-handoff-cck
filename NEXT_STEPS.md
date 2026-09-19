@@ -13,6 +13,26 @@ and pytest.
 
 ## Current state
 
+### Unreleased new-session workflow — 2026-09-12
+
+The skill and handoff/resume commands now support a host-assisted new task with
+context loaded and waiting. Codex Desktop supplies creation/observation; the MCP
+server retains its seven provider-neutral tools. The workflow freezes the export,
+records the destination, requires a completed acknowledgement, preserves a pause,
+and reconciles uncertain creation before retrying. Unsupported hosts use an explicit
+export-only fallback. See `skills/agent-handoff/references/new-session.md`.
+
+The underlying Codex Desktop sequence was demonstrated in the preceding TMI handoff:
+task creation, context load, final paused acknowledgement and an idle destination.
+This is evidence for that host capability, not a fresh end-to-end test of the changed
+plugin skill or proof of other hosts. The installed 0.2.5 plugin cache is unchanged;
+publishing and managed-install refresh remain separate release steps.
+
+Local validation: Python compile, Ruff, all 73 existing tests, skill reference links
+and `git diff --check` pass. The old `.venv` is an external junction that could not
+be created/resolved by uv; it was preserved. Validation used a command-scoped local
+`UV_PROJECT_ENVIRONMENT=work/new-session-test-env`, with dependencies kept on C:.
+
 The 0.2.x milestone defined in `DEVELOPMENT_PLAN.md` is essentially implemented.
 
 What works:

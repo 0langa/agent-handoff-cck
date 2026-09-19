@@ -54,6 +54,26 @@ The skill will route these requests to the MCP tools:
 
 Same-provider handoff is supported, including Codex to Codex for a new chat.
 
+### New task, already loaded and waiting
+
+Ask: **"Pause here and hand off to a new session, loaded and waiting."**
+
+On hosts with task creation and observation tools, the skill captures and strictly
+verifies the checkpoint, saves a frozen export, creates one task with that context,
+and waits for its completed acknowledgement. The destination stays paused until
+you resume it. A receipt under `.handoff/sessions/` records the actual task and result.
+An uncertain result is reconciled before another creation is attempted.
+
+In Codex Desktop, this uses the host's `list_projects`, `create_thread` and
+`wait_threads` tools. These are host capabilities orchestrated by the plugin skill;
+the Python MCP server does not itself expose a cross-app task launcher. Hosts
+without task creation keep the verified export fallback. A plain export or
+checkpoint request does not create a task.
+
+See [the complete workflow](skills/agent-handoff/references/new-session.md) for
+checkout boundaries, acknowledgement, fallback and failure handling. Loading context
+does not establish that the destination has the same working tree or runtime.
+
 ## CLI fallback
 
 ```bash
@@ -138,6 +158,7 @@ After installation and `/reload`, commands are namespaced:
   active.md         — human-readable fallback (pasteable into any agent)
   history/          — immutable timestamped snapshots
   exports/          — provider-specific continuation prompts
+  sessions/         — frozen exports and observed destination-task receipts
   attachments/      — optional diffs and logs (opt-in)
 ```
 

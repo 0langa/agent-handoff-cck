@@ -18,6 +18,9 @@ Implementation notes:
 - Record Codex-specific connectors (Gmail, GitHub).
 - Do not assume Claude/Kimi have Codex connectors.
 - Plugin-native command installation depends on the Codex marketplace/client install path.
+- For an explicitly requested new session, follow [the new-session workflow](new-session.md).
+  Codex Desktop's host tools create the task and observe its completed paused
+  acknowledgement. If those tools are absent, return the verified export fallback.
 
 ## Claude Code
 

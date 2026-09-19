@@ -18,7 +18,10 @@ Agent behavior:
 1. Load and validate `.handoff/active.json`.
 2. Read the returned continuation summary and `.handoff/active.md`.
 3. Respect capability warnings; if a required capability is blocked, stop and ask the user.
-4. Continue from the recorded next steps.
+4. During a new-session load-and-wait bootstrap, acknowledge the handoff ID and
+   paused state, end the turn, and wait for the user. Do not spawn another task.
+   Otherwise continue from the recorded next steps within the user's current scope.
+   Reading via `handoff_resume` does not override an explicit pause.
 
 ## CLI fallback
 
