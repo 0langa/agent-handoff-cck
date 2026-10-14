@@ -215,6 +215,51 @@ def test_redact_tokens_leaves_token_lookalikes_alone() -> None:
         _assert_intact(text)
 
 
+def test_redact_tokens_secret_cli_flags() -> None:
+    cases = {
+        "mytool --token abc123def456 --verbose": "mytool --token [REDACTED] --verbose",
+        "mytool --token=abc123def456": "mytool --token=[REDACTED]",
+        "mytool --token=abc": "mytool --token=[REDACTED]",
+        'mytool --token "s3cr3t value" next': 'mytool --token "[REDACTED]" next',
+        "mytool --password hunter2": "mytool --password [REDACTED]",
+        "mytool --password=hunter2": "mytool --password=[REDACTED]",
+        "mytool --db-password='p@ss w0rd'": "mytool --db-password='[REDACTED]'",
+        "mytool --api-key 9f8e7d6c5b4a": "mytool --api-key [REDACTED]",
+        "mytool --secret Zx9Qw8Er7": "mytool --secret [REDACTED]",
+        "mytool --client-secret abcXYZdef": "mytool --client-secret [REDACTED]",
+        "mytool --auth-token=abcdefg --other": "mytool --auth-token=[REDACTED] --other",
+        "mytool --password correcthorsebatterystaple": "mytool --password [REDACTED]",
+        "vault login -token abc123def": "vault login -token [REDACTED]",
+        "consul acl token list -token=abc123": "consul acl token list -token=[REDACTED]",
+        "(use --token abc123).": "(use --token [REDACTED]).",
+    }
+    for text, expected in cases.items():
+        assert scan_for_secrets(text), text
+        assert redact_tokens(text) == expected, text
+        assert not scan_for_secrets(expected), expected
+
+
+def test_redact_tokens_leaves_ordinary_cli_flags_alone() -> None:
+    for text in [
+        "mytool --max-tokens 4096",
+        "mytool --tokenizer cl100k_base",
+        "mytool --token-file ~/.config/token",
+        "docker login --password-stdin < pw.txt",
+        "pg_dump --no-password mydb",
+        "mytool --token --verbose",
+        "mytool --secretary-name Jane",
+        # Prose and placeholders after a space-separated flag.
+        "use the --token flag",
+        "pass --token instead of the env var",
+        "run --password manually, then --token later.",
+        "pass --token TOKEN or --api-key YOUR_API_KEY",
+        "gh --token $GITHUB_TOKEN",
+        "gh --token ${{ secrets.GITHUB_TOKEN }}",
+        "mytool --password <your-password>",
+    ]:
+        _assert_intact(text)
+
+
 def test_safe_changed_files_filters_env() -> None:
     files = ["src/main.py", ".env", "tests/test.py"]
     safe = safe_changed_files(files)

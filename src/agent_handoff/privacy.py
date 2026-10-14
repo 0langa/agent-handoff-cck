@@ -91,7 +91,7 @@ _MIN_BARE_LEN = 8
 # An unquoted value ends at whitespace, a quote, or a delimiter that ends a value in
 # URLs, JSON, YAML flow maps and shell pipelines.
 _BARE_VALUE_RE = re.compile(r"""[^\s'"`,;&|<>(){}\[\]]+""")
-_TRAILING_PUNCT_RE = re.compile(r"[.:!?)\]}]+$")
+_CLOSERS = {")": "(", "]": "[", "}": "{"}
 # Escaped quotes first, so `{\"api_key\": \"...\"}` inside a JSON string works too.
 _QUOTES = ('\\"', "\\'", '"', "'")
 # HTTP auth schemes stay visible: `Authorization: Bearer [REDACTED]`.
@@ -134,6 +134,13 @@ _ASSIGNMENT_RE = re.compile(
 )
 
 
+# `--token VALUE`, `--token=VALUE` and Go-style `-token VALUE`. Only the flag and the
+# separator are consumed.
+_FLAG_RE = re.compile(r"(?<![\w-])--?(?P<name>[A-Za-z][\w.-]*)(?P<sep>=|[ \t]+)")
+# The shell word after a flag. Braces and brackets stay in, so `${VAR}` is one word.
+_FLAG_WORD_RE = re.compile(r"""[^\s'"`,;&|<>]+""")
+
+
 def is_secret_name(name: str) -> bool:
     """Return True when a key, header, variable or flag name names a secret."""
     words = [
@@ -156,7 +163,7 @@ def _is_placeholder(value: str) -> bool:
 
 
 def _looks_like_credential(word: str) -> bool:
-    """Tell a credential from a prose word, for bare words after an auth scheme."""
+    """Tell a credential from a prose word, as in "use the --token flag"."""
     return (
         len(word) >= 16
         or any(c.isdigit() for c in word)
@@ -187,8 +194,17 @@ def _value_at(
     word = word_re.match(text, pos)
     if word is None:
         return None
-    end = pos + len(_TRAILING_PUNCT_RE.sub("", word.group()))
-    return pos, end, False, scheme is not None
+    return pos, pos + len(_strip_trailing_punctuation(word.group())), False, scheme is not None
+
+
+def _strip_trailing_punctuation(word: str) -> str:
+    """Drop sentence punctuation and unbalanced closing brackets: `abc123).` -> `abc123`."""
+    while word and word[-1] in ".:!?)]}":
+        opener = _CLOSERS.get(word[-1])
+        if opener and word.count(opener) >= word.count(word[-1]):
+            break
+        word = word[:-1]
+    return word
 
 
 def _assignment_spans(text: str) -> list[tuple[int, int]]:
@@ -211,10 +227,34 @@ def _assignment_spans(text: str) -> list[tuple[int, int]]:
     return spans
 
 
+def _flag_spans(text: str) -> list[tuple[int, int]]:
+    spans = []
+    for match in _FLAG_RE.finditer(text):
+        name = match.group("name")
+        if name.lower().startswith(("no-", "no_")) or not is_secret_name(name):
+            continue
+        found = _value_at(text, match.end(), _FLAG_WORD_RE)
+        if found is None:
+            continue
+        start, end, quoted, _ = found
+        value = text[start:end]
+        if not value or _is_placeholder(value):
+            continue
+        # `--token=x` always binds a value. After a space, the next word may be prose
+        # ("pass --token instead") or another flag, so it has to look like a credential.
+        if match.group("sep") != "=" and not quoted and (
+            value.startswith("-") or not _looks_like_credential(value)
+        ):
+            continue
+        spans.append((start, end))
+    return spans
+
+
 def _secret_spans(text: str) -> list[tuple[int, int]]:
     """Return the sorted, merged spans of every secret value in ``text``."""
     spans = [m.span() for m in _KNOWN_TOKEN_RE.finditer(text)]
     spans += _assignment_spans(text)
+    spans += _flag_spans(text)
     merged: list[tuple[int, int]] = []
     for start, end in sorted(spans):
         if merged and start <= merged[-1][1]:
