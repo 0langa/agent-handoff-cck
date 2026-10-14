@@ -108,6 +108,24 @@ _PLACEHOLDER_RE = re.compile(
     re.DOTALL,
 )
 
+# Credential formats that are secret on their own, with no key in front. Each one is
+# anchored on a distinctive prefix plus a minimum length, so ordinary words such as
+# `sk-learn`, `xoxo` or a lone `AKIA` do not match.
+_KNOWN_TOKEN_RE = re.compile(
+    r"(?<![A-Za-z0-9_-])(?:"
+    r"gh[pousr]_[A-Za-z0-9]{20,}"  # GitHub: ghp_, gho_, ghu_, ghs_, ghr_
+    r"|github_pat_[A-Za-z0-9_]{20,}"  # GitHub fine-grained PAT
+    r"|sk-ant-[A-Za-z0-9_-]{20,}"  # Anthropic
+    r"|sk-(?=[A-Za-z0-9_-]*\d)[A-Za-z0-9_-]{20,}"  # OpenAI style: sk-..., sk-proj-...
+    r"|(?:AKIA|ASIA)[A-Z0-9]{16}"  # AWS access key ID
+    r"|(?:xoxe\.)?xox[abeoprs]-[A-Za-z0-9-]{10,}"  # Slack
+    r"|AIza[A-Za-z0-9_-]{35}"  # Google API key
+    r"|glpat-[A-Za-z0-9_-]{20,}"  # GitLab PAT
+    r"|npm_[A-Za-z0-9]{36}"  # npm
+    r"|eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*"  # JWT
+    r")(?![A-Za-z0-9])"
+)
+
 # `name: value`, `name=value` or `name => value`, with optional quotes around the name,
 # as in JSON, YAML, .env files, HTTP headers and Python dicts. Only the name and the
 # separator are consumed, so the value is still scanned for secrets of its own.
@@ -195,8 +213,10 @@ def _assignment_spans(text: str) -> list[tuple[int, int]]:
 
 def _secret_spans(text: str) -> list[tuple[int, int]]:
     """Return the sorted, merged spans of every secret value in ``text``."""
+    spans = [m.span() for m in _KNOWN_TOKEN_RE.finditer(text)]
+    spans += _assignment_spans(text)
     merged: list[tuple[int, int]] = []
-    for start, end in sorted(_assignment_spans(text)):
+    for start, end in sorted(spans):
         if merged and start <= merged[-1][1]:
             merged[-1] = (merged[-1][0], max(merged[-1][1], end))
         else:

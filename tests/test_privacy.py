@@ -1,5 +1,7 @@
 """Tests for privacy and redaction helpers."""
 
+import base64
+
 from agent_handoff.privacy import (
     is_secret_name,
     looks_sensitive,
@@ -23,6 +25,15 @@ def _assert_redacted(text: str, secret: str) -> str:
 def _assert_intact(text: str) -> None:
     assert not scan_for_secrets(text), text
     assert redact_tokens(text) == text
+
+
+def _fake(prefix: str, length: int, alphabet: str = "aB3dE5fG7hJ9kL1mN0") -> str:
+    """Build a token-shaped value at runtime, so secret scanners don't flag this file."""
+    return prefix + (alphabet * length)[:length]
+
+
+def _b64(data: str) -> str:
+    return base64.urlsafe_b64encode(data.encode()).decode().rstrip("=")
 
 
 def test_looks_sensitive_env() -> None:
@@ -146,6 +157,60 @@ def test_redact_tokens_skips_placeholders() -> None:
         'password: "********"',
         'password: "[REDACTED]"',
         "token: none",
+    ]:
+        _assert_intact(text)
+
+
+def test_redact_tokens_known_token_formats() -> None:
+    jwt = ".".join(
+        [_b64('{"alg":"HS256","typ":"JWT"}'), _b64('{"sub":"1234567890"}'), _fake("", 43)]
+    )
+    tokens = {
+        "GitHub classic": _fake("ghp_", 36),
+        "GitHub OAuth": _fake("gho_", 36),
+        "GitHub user-to-server": _fake("ghu_", 36),
+        "GitHub server-to-server": _fake("ghs_", 36),
+        "GitHub refresh": _fake("ghr_", 36),
+        "GitHub fine-grained": _fake("github_pat_", 82, "11AbCdEfGh_0123456789"),
+        "OpenAI legacy": _fake("sk-", 48),
+        "OpenAI project": _fake("sk-proj-", 64, "Ab3_dE5-fG7"),
+        "Anthropic": _fake("sk-ant-api03-", 93, "Ab3_dE5-fG7"),
+        "AWS long-term": _fake("AKIA", 16, "IOSFODNN7EXAMPLE"),
+        "AWS temporary": _fake("ASIA", 16, "Q3EGJWZK7EXAMPL2"),
+        "Slack bot": _fake("xoxb-", 50, "1234567890-"),
+        "Slack user": _fake("xoxp-", 60, "1234567890-aBcD-"),
+        "Google": _fake("AIza", 35, "SyA1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q"),
+        "GitLab": _fake("glpat-", 20),
+        "npm": _fake("npm_", 36),
+        "JWT": jwt,
+    }
+    for kind, token in tokens.items():
+        for text in [
+            f"used {token} for the API",
+            f"({token}).",
+            f'"{token}"',
+            f"curl -H 'Authorization: Bearer {token}'",
+        ]:
+            redacted = _assert_redacted(text, token)
+            assert "[REDACTED]" in redacted, kind
+    assert redact_tokens(f"push with {tokens['GitHub classic']}.") == "push with [REDACTED]."
+    url = f"https://{tokens['GitHub classic']}@github.com/o/r.git"
+    assert redact_tokens(url) == "https://[REDACTED]@github.com/o/r.git"
+
+
+def test_redact_tokens_leaves_token_lookalikes_alone() -> None:
+    for text in [
+        "sk-learn and scikit-learn are the same library",
+        "see the risk-assessment-for-q3-2026-planning doc",
+        "sk-this-is-a-long-kebab-case-css-class-name",
+        "ghp_ and github_pat_ are GitHub token prefixes; ghp_abc is too short",
+        "AKIA and ASIA start AWS access key IDs",
+        "xoxo, gossip girl",
+        "AIza starts a Google API key",
+        "eyJ is base64 for an opening brace and quote",
+        "npm_config_cache and ghost_writer are plain names",
+        "commit 319cab6d2f0e4a8b9c1d3e5f7a9b0c2d4e6f8a0b",
+        "id 123e4567-e89b-12d3-a456-426614174000",
     ]:
         _assert_intact(text)
 
