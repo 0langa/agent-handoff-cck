@@ -214,7 +214,7 @@ uv run pytest
 
 ## Version
 
-Current version: `0.2.6`.
+Current version: `0.2.7`.
 
 ## License
 
