@@ -300,6 +300,189 @@ def test_redact_tokens_leaves_urls_without_passwords_alone() -> None:
         _assert_intact(text)
 
 
+def test_redact_tokens_cookie_headers() -> None:
+    # Cookie values go; cookie names and Set-Cookie attributes stay readable.
+    cases = {
+        "Cookie: sessionid=abc123def456; theme=dark":
+            "Cookie: sessionid=[REDACTED]; theme=[REDACTED]",
+        "Set-Cookie: sid=Zx9Qw8Er7Ty6; Path=/; Expires=Wed, 21 Oct 2026 07:28:00 GMT; HttpOnly":
+            "Set-Cookie: sid=[REDACTED]; Path=/; Expires=Wed, 21 Oct 2026 07:28:00 GMT; HttpOnly",
+        'curl -H "Cookie: sid=abc123def456" https://example.com':
+            'curl -H "Cookie: sid=[REDACTED]" https://example.com',
+        '{"Cookie": "sid=abc123def456; lang=de", "Accept": "text/html"}':
+            '{"Cookie": "sid=[REDACTED]; lang=[REDACTED]", "Accept": "text/html"}',
+        "headers = {'Set-Cookie': 'token=abc; Path=/'}":
+            "headers = {'Set-Cookie': 'token=[REDACTED]; Path=/'}",
+        # HTTP/2 header dumps use lower-case names.
+        "  cookie: _ga=GA1.2.3; csrftoken=Zx9Qw8":
+            "  cookie: _ga=[REDACTED]; csrftoken=[REDACTED]",
+        "curl -b 'sid=abc123; lang=en' https://x": "curl -b 'sid=[REDACTED]; lang=[REDACTED]' https://x",
+        "curl --cookie=sid=abc123 https://x": "curl --cookie=sid=[REDACTED] https://x",
+    }
+    for text, expected in cases.items():
+        assert scan_for_secrets(text), text
+        assert redact_tokens(text) == expected, text
+        assert not scan_for_secrets(expected), expected
+    assert redact_data(
+        {"Cookie": "sid=abc123def456", "Set-Cookie": ["a=1; Path=/", "b=2"], "cookie_jar": "x.txt"}
+    ) == {"Cookie": "sid=[REDACTED]", "Set-Cookie": ["a=[REDACTED]; Path=/", "b=[REDACTED]"],
+          "cookie_jar": "x.txt"}
+
+
+def test_redact_tokens_leaves_cookie_prose_alone() -> None:
+    for text in [
+        "I baked a cookie: it was great",
+        "set the cookie: theme=dark before testing",
+        "The Cookie header carries sid=... values",
+        "    cookie: http.cookies.BaseCookie[str] = http.cookies.SimpleCookie()",
+        "Cookie: sid=<session-id>",
+        "Cookie: sid=${SESSION_ID}",
+        "curl -b cookies.txt -c cookies.txt https://x",
+    ]:
+        _assert_intact(text)
+
+
+def _pem(label: str, body: str) -> str:
+    """Build a PEM block at runtime, so secret scanners don't flag this file."""
+    return f"-----BEGIN {label}-----\n{body}\n-----END {label}-----"
+
+
+def test_redact_tokens_pem_private_keys() -> None:
+    line = _fake("MIIEvQIBADANBgkqhkiG9w0BAQEFAASC", 32)
+    body = f"{line}\n{line}\n{line[:20]}=="
+    for label in [
+        "PRIVATE KEY",
+        "RSA PRIVATE KEY",
+        "EC PRIVATE KEY",
+        "OPENSSH PRIVATE KEY",
+        "ENCRYPTED PRIVATE KEY",
+        "PGP PRIVATE KEY BLOCK",
+    ]:
+        text = f"key:\n{_pem(label, body)}\nnext line"
+        redacted = _assert_redacted(text, line)
+        assert redacted == f"key:\n{_pem(label, '[REDACTED]')}\nnext line", redacted
+    # A key inside a JSON string keeps its escaped line breaks.
+    escaped = '{"key": "' + _pem("PRIVATE KEY", body).replace("\n", "\\n") + '\\n"}'
+    assert _assert_redacted(escaped, line) == (
+        '{"key": "' + _pem("PRIVATE KEY", "[REDACTED]").replace("\n", "\\n") + '\\n"}'
+    )
+    # A key cut off before its END line is still redacted.
+    truncated = f"-----BEGIN RSA PRIVATE KEY-----\n{line}\n{line}\n"
+    assert _assert_redacted(truncated, line) == "-----BEGIN RSA PRIVATE KEY-----\n[REDACTED]\n"
+
+
+def test_redact_tokens_leaves_pem_lookalikes_alone() -> None:
+    line = _fake("MIIDdzCCAl+gAwIBAgIEbXxXrjANBgkqhkiG9w0B", 32)
+    for text in [
+        _pem("CERTIFICATE", f"{line}\n{line}"),
+        _pem("PUBLIC KEY", f"{line}\n{line}"),
+        (
+            "Keys start with -----BEGIN RSA PRIVATE KEY----- and end with "
+            "-----END RSA PRIVATE KEY-----."
+        ),
+        _pem("PRIVATE KEY", "..."),
+    ]:
+        _assert_intact(text)
+
+
+def test_redact_tokens_curl_user_credentials() -> None:
+    cases = {
+        "curl -u alice:s3cr3tPass https://api.example.com":
+            "curl -u alice:[REDACTED] https://api.example.com",
+        "curl -s -u 'bob:p@ss word' https://x": "curl -s -u 'bob:[REDACTED]' https://x",
+        'curl --user "carol:hunter2!" https://x': 'curl --user "carol:[REDACTED]" https://x',
+        "curl --user=dave:Zx9Qw8 https://x": "curl --user=dave:[REDACTED] https://x",
+        "curl -ualice:pw123456 https://x": "curl -ualice:[REDACTED] https://x",
+        "curl -U proxyuser:proxypass99 https://x": "curl -U proxyuser:[REDACTED] https://x",
+        "curl.exe -u admin:1234 http://router": "curl.exe -u admin:[REDACTED] http://router",
+        # Continued shell lines belong to the same command.
+        "curl https://x \\\n  -u alice:secret99": "curl https://x \\\n  -u alice:[REDACTED]",
+    }
+    for text, expected in cases.items():
+        assert scan_for_secrets(text), text
+        assert redact_tokens(text) == expected, text
+        assert not scan_for_secrets(expected), expected
+
+
+def test_redact_tokens_leaves_other_user_flags_alone() -> None:
+    for text in [
+        "docker run -u 1000:1000 image",
+        "docker run --user 1000:1000 image",
+        "curl -u alice https://x",
+        "curl -u : --negotiate https://x",
+        "curl -u $USER:$PASS https://x",
+        "curl -u alice:${TOKEN} https://x",
+        "curl -u alice:<password> https://x",
+        "curl --user-agent 'Mozilla/5.0 (X11; Linux:x86)' https://x",
+        "use curl -u to pass credentials",
+        "curl https://x\n-u alice:not-part-of-curl",
+    ]:
+        _assert_intact(text)
+
+
+def test_redact_tokens_password_prose() -> None:
+    cases = {
+        "the password is hunter2": "the password is [REDACTED]",
+        "The admin password is Sommer2024! now.": "The admin password is [REDACTED] now.",
+        "password for postgres is pg_pass_99.": "password for postgres is [REDACTED].",
+        "The passphrase was CorrectHorse": "The passphrase was [REDACTED]",
+        "the password is now Xy7abcde": "the password is now [REDACTED]",
+        "Das Passwort ist Geheim123": "Das Passwort ist [REDACTED]",
+        "Das Kennwort lautet: Xy7!abcd": "Das Kennwort lautet: [REDACTED]",
+        'the password is "s3cret!"': 'the password is "[REDACTED]"',
+        # Markdown code, as agents write values in a handoff.
+        "The test user's password is `Sommer2024!`.": "The test user's password is `[REDACTED]`.",
+        "the password is `s3cr3t-pass`": "the password is `[REDACTED]`",
+        # In JSON text a `\n` escape ends the value.
+        '{"note": "the password is Sommer2024!\\nnext step"}': '{"note": "the password is [REDACTED]\\nnext step"}',
+    }
+    for text, expected in cases.items():
+        assert scan_for_secrets(text), text
+        assert redact_tokens(text) == expected, text
+        assert not scan_for_secrets(expected), expected
+
+
+def test_redact_tokens_leaves_password_prose_alone() -> None:
+    for text in [
+        "the password is wrong",
+        "the password is correct, login works",
+        "the password is still the old one",
+        "password is 8 characters long",
+        "the password is in the vault",
+        "the password is required",
+        "the password was reset yesterday",
+        "password is $DB_PASSWORD",
+        "the password is <your-password>",
+        "Das Passwort ist falsch",
+        "Das Passwort ist abgelaufen",
+        "a passwordless login is set up",
+    ]:
+        _assert_intact(text)
+
+
+def test_redact_tokens_leaves_descriptive_password_prose_alone() -> None:
+    # Capitalized, long, umlauted, hyphenated and algorithm words describe a password.
+    for text in [
+        "The password is Optional for local dev.",
+        "the password is Required on first login",
+        "The password is case-insensitive.",
+        "The password is environment-specific.",
+        "The password is SHA256-hashed before storage.",
+        "The password is base64-encoded in the config.",
+        "The password is PBKDF2 hashed",
+        "The password is 2FA-protected",
+        "The password is Bitwarden-managed.",
+        "the password is `required`",
+        "Das Passwort ist Pflicht.",
+        "Das Passwort ist Standard bei allen Konten.",
+        "Das Passwort ist Sicherheitsrelevant.",
+        "Das Passwort ist ungültig.",
+        "Das Kennwort ist überall gleich.",
+        '{"text": "If your password is lost\\nHow to reset it"}',
+    ]:
+        _assert_intact(text)
+
+
 def test_redact_data_walks_json_like_values() -> None:
     data = {
         "title": "use GITHUB_TOKEN=abcdefgh12345",
