@@ -134,6 +134,13 @@ _ASSIGNMENT_RE = re.compile(
 )
 
 
+# `scheme://user:password@host`. Only the password is redacted; the user name stays,
+# because it is usually not secret and helps the next agent (`postgres`, `oauth2`).
+# The password may contain `@`; the last `@` before the host ends it.
+_URL_CREDENTIALS_RE = re.compile(
+    r"\b[A-Za-z][A-Za-z0-9+.-]*://[^\s:/?#@'\"<>]*:(?P<password>[^\s/?#'\"<>]+)@"
+)
+
 # `--token VALUE`, `--token=VALUE` and Go-style `-token VALUE`. Only the flag and the
 # separator are consumed.
 _FLAG_RE = re.compile(r"(?<![\w-])--?(?P<name>[A-Za-z][\w.-]*)(?P<sep>=|[ \t]+)")
@@ -253,6 +260,11 @@ def _flag_spans(text: str) -> list[tuple[int, int]]:
 def _secret_spans(text: str) -> list[tuple[int, int]]:
     """Return the sorted, merged spans of every secret value in ``text``."""
     spans = [m.span() for m in _KNOWN_TOKEN_RE.finditer(text)]
+    spans += [
+        m.span("password")
+        for m in _URL_CREDENTIALS_RE.finditer(text)
+        if not _is_placeholder(m.group("password"))
+    ]
     spans += _assignment_spans(text)
     spans += _flag_spans(text)
     merged: list[tuple[int, int]] = []

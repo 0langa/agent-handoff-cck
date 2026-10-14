@@ -260,6 +260,41 @@ def test_redact_tokens_leaves_ordinary_cli_flags_alone() -> None:
         _assert_intact(text)
 
 
+def test_redact_tokens_url_credentials() -> None:
+    cases = {
+        "git clone https://deploy:hunter2pass@git.example.com/team/repo.git":
+            "git clone https://deploy:[REDACTED]@git.example.com/team/repo.git",
+        "DATABASE_URL=postgres://admin:S3cr3t!@db.internal:5432/app":
+            "DATABASE_URL=postgres://admin:[REDACTED]@db.internal:5432/app",
+        "redis://:p%40ssw0rd@cache:6379/0": "redis://:[REDACTED]@cache:6379/0",
+        "https://user:p@ss@host.example.com/path": "https://user:[REDACTED]@host.example.com/path",
+        "mongodb+srv://app:Zx9Qw8@cluster0.mongodb.net/db?retryWrites=true":
+            "mongodb+srv://app:[REDACTED]@cluster0.mongodb.net/db?retryWrites=true",
+        "jdbc:postgresql://svc:pw12345@db:5432/app": "jdbc:postgresql://svc:[REDACTED]@db:5432/app",
+        '"url": "https://bot:t0ken@api.example.com/v1"':
+            '"url": "https://bot:[REDACTED]@api.example.com/v1"',
+        "ftp://anonymous:guest@ftp.example.com/pub": "ftp://anonymous:[REDACTED]@ftp.example.com/pub",
+    }
+    for text, expected in cases.items():
+        assert scan_for_secrets(text), text
+        assert redact_tokens(text) == expected, text
+        assert not scan_for_secrets(expected), expected
+
+
+def test_redact_tokens_leaves_urls_without_passwords_alone() -> None:
+    for text in [
+        "https://example.com:8443/path",
+        "ssh://git@github.com/o/r.git",
+        "git@github.com:o/r.git",
+        "mailto:someone@example.com",
+        "http://localhost:3000/login?next=/a@b",
+        "see https://example.com/a:b@c for details",
+        "postgres://user:${DB_PASSWORD}@db/app",
+        "postgres://user:****@db/app",
+    ]:
+        _assert_intact(text)
+
+
 def test_safe_changed_files_filters_env() -> None:
     files = ["src/main.py", ".env", "tests/test.py"]
     safe = safe_changed_files(files)
