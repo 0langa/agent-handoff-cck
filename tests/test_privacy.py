@@ -24,6 +24,20 @@ def test_redact_tokens() -> None:
     assert "abc123secret" not in redacted
 
 
+def test_redact_tokens_json_quoted_key() -> None:
+    text = '{"api_key": "sk-abcdefghijklmnop1234"}'
+    assert scan_for_secrets(text)
+    redacted = redact_tokens(text)
+    assert "sk-abcdefghijklmnop1234" not in redacted
+    assert '"api_key": [REDACTED]' in redacted
+
+
+def test_redact_tokens_bearer_header() -> None:
+    text = "Authorization: Bearer abcdefghijklmnop1234"
+    assert scan_for_secrets(text)
+    assert redact_tokens(text) == "Authorization: Bearer [REDACTED]"
+
+
 def test_safe_changed_files_filters_env() -> None:
     files = ["src/main.py", ".env", "tests/test.py"]
     safe = safe_changed_files(files)
