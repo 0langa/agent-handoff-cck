@@ -114,17 +114,24 @@ Codex-specific: record provider-bound connectors (Gmail, GitHub) as capabilities
 
 ### Claude Code
 
-Install the plugin from a local path. Slash commands become available when the client discovers `commands/`:
+Install from the `0langas-plugins` marketplace, or load a local checkout for one session:
 
 ```text
-/handoff:init --title "..." --objective "..."
-/handoff:capture --done "step A" --next "step B"
-/handoff:status
-/handoff:verify
-/handoff:export codex
-/handoff:resume
-/handoff:close
-/handoff kimi
+claude plugin install agent-handoff@0langas-plugins
+claude --plugin-dir C:\Users\...\agent-handoff-cck
+```
+
+Commands are namespaced under the plugin name:
+
+```text
+/agent-handoff:init --title "..." --objective "..."
+/agent-handoff:capture --done "step A" --next "step B"
+/agent-handoff:status
+/agent-handoff:verify
+/agent-handoff:export codex
+/agent-handoff:resume
+/agent-handoff:close
+/agent-handoff:handoff kimi
 ```
 
 Claude Code agents (`handoff-verifier`, `handoff-summarizer`) are available through the default `agents/` directory discovery.
