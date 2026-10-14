@@ -201,7 +201,7 @@ When a capability is provider-bound (e.g., Codex Gmail connector), record a fall
 ## Safety
 
 - `.env`, tokens, keys, and raw private data are never captured.
-- Secret-looking values are redacted from everything written to `.handoff/`, by the MCP tools and the CLI alike: secret `key: value` pairs, `--token`-style flags, URL passwords and well-known token formats.
+- Secret-looking values are redacted from everything written to `.handoff/`, by the MCP tools and the CLI alike: secret `key: value` pairs, `--token`-style flags, URL passwords, well-known token formats, `Cookie` and `Set-Cookie` header values (cookie names and attributes stay), PEM private-key blocks, the password in `curl -u user:password`, and, as a best effort, prose such as "the password is …" when the value looks like a credential.
 - Sensitive sources are listed by category, not by content.
 - Destructive actions require explicit recording and user approval flags.
 

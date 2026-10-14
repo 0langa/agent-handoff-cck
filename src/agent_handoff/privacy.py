@@ -148,6 +148,54 @@ _FLAG_RE = re.compile(r"(?<![\w-])--?(?P<name>[A-Za-z][\w.-]*)(?P<sep>=|[ \t]+)"
 # The shell word after a flag. Braces and brackets stay in, so `${VAR}` is one word.
 _FLAG_WORD_RE = re.compile(r"""[^\s'"`,;&|<>]+""")
 
+# `Cookie:` and `Set-Cookie:` headers at the start of a line or right after a quote, as
+# in raw HTTP, `curl -H "Cookie: ..."` and JSON or Python header maps. Prose such as
+# "the cookie: ..." in the middle of a sentence does not match.
+_COOKIE_HEADER_RE = re.compile(
+    r"""(?:^|(?<=["'`]))[ \t]*(?P<name>(?:set-)?cookie)\\?["']?[ \t]*:[ \t]*""",
+    re.IGNORECASE | re.MULTILINE,
+)
+# One `name=value` pair of a cookie header: a cookie-name token right before `=`, so a
+# Python annotation such as `cookie: SimpleCookie = SimpleCookie()` does not match.
+# The value ends at `;`, a quote or the end of the line.
+_COOKIE_PAIR_RE = re.compile(r"""(?P<name>[!#$%&*+.^_|~0-9A-Za-z-]+)=(?P<value>[^;\r\n"'\\]*)""")
+# Set-Cookie attributes are not secret and help the next agent.
+_COOKIE_ATTRIBUTES = frozenset(
+    {"path", "domain", "expires", "max-age", "samesite", "priority", "version", "comment"}
+)
+
+# PEM private keys: RSA, EC, DSA, OpenSSH, PKCS#8, encrypted and PGP. The BEGIN and END
+# lines stay, the key material between them is redacted. Public keys and certificates
+# are not secret and do not match.
+_PEM_BEGIN_RE = re.compile(r"-----BEGIN (?P<label>(?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?)-----")
+# Key material without an END line, as in a cut-off log: base64 lines, also with JSON
+# `\n` escapes between them.
+_PEM_TRUNCATED_BODY_RE = re.compile(r"(?:[A-Za-z0-9+/=\s]|\\[nr])*")
+# Real key material always has a long base64 run; a sentence that only names the
+# BEGIN and END lines does not.
+_PEM_MATERIAL_RE = re.compile(r"[A-Za-z0-9+/]{40,}")
+_PEM_PADDING_RE = re.compile(r"(?:\s|\\[nr])*")
+
+# A curl command, including lines continued with `\` (sh), a backtick (PowerShell) or
+# `^` (cmd). `-u`, `--user`, `-U` and `--proxy-user` are only credentials there:
+# `docker run -u 1000:1000` is a user and group id.
+_CURL_RE = re.compile(r"(?<![\w.-])curl(?:\.exe)?(?![\w.-])(?:[\\`^]\r?\n|[^\n])*")
+_CURL_USER_RE = re.compile(r"(?<![\w-])(?:--(?:proxy-)?user(?:=|[ \t]+)|-[uU][ \t]*)")
+_CURL_COOKIE_RE = re.compile(r"(?<![\w-])(?:--cookie(?:=|[ \t]+)|-b[ \t]*)")
+
+# Best effort for prose: "the password is hunter2", "Passwort lautet Sommer2024!".
+# The value must look like a credential, so "the password is wrong" stays intact.
+_PROSE_PASSWORD_RE = re.compile(
+    r"\b(?:password|passwd|passphrase|passcode|passwort|kennwort)"
+    r"(?:[ \t]+(?:for|of|on|f(?:\u00fc|ue)r|von)[ \t]+[^\s:=]+)?"
+    # Longer phrases first: "is now X" must not stop at "is".
+    r"[ \t]+(?:is[ \t]+now|is[ \t]+still|is[ \t]+set[ \t]+to|is|was|set[ \t]+to|changed[ \t]+to"
+    r"|ist[ \t]+jetzt|ist|war|lautet)"
+    r"[ \t]*:?[ \t]+",
+    re.IGNORECASE,
+)
+_MIN_PROSE_LEN = 6
+
 
 def is_secret_name(name: str) -> bool:
     """Return True when a key, header, variable or flag name names a secret."""
@@ -261,6 +309,95 @@ def _flag_spans(text: str) -> list[tuple[int, int]]:
     return spans
 
 
+def _cookie_pair_spans(text: str, start: int, end: int) -> list[tuple[int, int]]:
+    """Spans of the cookie values in ``text[start:end]``; names and attributes stay."""
+    spans = []
+    for match in _COOKIE_PAIR_RE.finditer(text, start, end):
+        value = match.group("value").rstrip()
+        if (
+            not value
+            or match.group("name").lower() in _COOKIE_ATTRIBUTES
+            or _is_placeholder(value)
+        ):
+            continue
+        spans.append((match.start("value"), match.start("value") + len(value)))
+    return spans
+
+
+def _cookie_spans(text: str) -> list[tuple[int, int]]:
+    spans = []
+    for match in _COOKIE_HEADER_RE.finditer(text):
+        start = match.end()
+        quote = next((q for q in _QUOTES if text.startswith(q, start)), "")
+        start += len(quote)
+        # A quoted value ends at its closing quote; a header inside a quoted string
+        # (`-H "Cookie: a=b"`) ends at that string's quote; a raw header at the line end.
+        stops = [quote] if quote else ['"', "'", "`"]
+        end = min(
+            (i for i in (text.find(stop, start) for stop in [*stops, "\n"]) if i != -1),
+            default=len(text),
+        )
+        spans += _cookie_pair_spans(text, start, end)
+    return spans
+
+
+def _pem_spans(text: str) -> list[tuple[int, int]]:
+    spans = []
+    for match in _PEM_BEGIN_RE.finditer(text):
+        start = match.end()
+        end = text.find(f"-----END {match.group('label')}-----", start)
+        if end == -1:
+            body = _PEM_TRUNCATED_BODY_RE.match(text, start)
+            end = body.end() if body else start
+        if not _PEM_MATERIAL_RE.search(text, start, end):
+            continue
+        # Keep the line breaks around the key material, so the block keeps its shape.
+        start = _PEM_PADDING_RE.match(text, start).end()
+        while end > start and (text[end - 1].isspace() or text[end - 2 : end] in ("\\n", "\\r")):
+            end -= 1 if text[end - 1].isspace() else 2
+        spans.append((start, end))
+    return spans
+
+
+def _curl_spans(text: str) -> list[tuple[int, int]]:
+    """`curl -u user:password` and `curl --cookie "name=value"`."""
+    spans = []
+    for command in _CURL_RE.finditer(text):
+        for match in _CURL_USER_RE.finditer(text, command.start(), command.end()):
+            found = _value_at(text, match.end(), _FLAG_WORD_RE)
+            if found is None:
+                continue
+            start, end, _, _ = found
+            colon = text.find(":", start, end)
+            # `-u user` makes curl ask for the password; `-u :` means no password.
+            if colon == -1 or colon + 1 == end or _is_placeholder(text[colon + 1 : end]):
+                continue
+            spans.append((colon + 1, end))
+        for match in _CURL_COOKIE_RE.finditer(text, command.start(), command.end()):
+            found = _value_at(text, match.end(), _FLAG_WORD_RE)
+            # Without `=` the value is a cookie jar file name.
+            if found is not None and "=" in text[found[0] : found[1]]:
+                spans += _cookie_pair_spans(text, found[0], found[1])
+    return spans
+
+
+def _prose_spans(text: str) -> list[tuple[int, int]]:
+    spans = []
+    for match in _PROSE_PASSWORD_RE.finditer(text):
+        found = _value_at(text, match.end(), _BARE_VALUE_RE)
+        if found is None:
+            continue
+        start, end, _, _ = found
+        value = text[start:end]
+        if (
+            len(value) >= _MIN_PROSE_LEN
+            and _looks_like_credential(value)
+            and not _is_placeholder(value)
+        ):
+            spans.append((start, end))
+    return spans
+
+
 def _secret_spans(text: str) -> list[tuple[int, int]]:
     """Return the sorted, merged spans of every secret value in ``text``."""
     spans = [m.span() for m in _KNOWN_TOKEN_RE.finditer(text)]
@@ -271,6 +408,14 @@ def _secret_spans(text: str) -> list[tuple[int, int]]:
     ]
     spans += _assignment_spans(text)
     spans += _flag_spans(text)
+    spans += _cookie_spans(text)
+    spans += _pem_spans(text)
+    spans += _curl_spans(text)
+    spans += _prose_spans(text)
+    return _merge(spans)
+
+
+def _merge(spans: list[tuple[int, int]]) -> list[tuple[int, int]]:
     merged: list[tuple[int, int]] = []
     for start, end in sorted(spans):
         if merged and start <= merged[-1][1]:
@@ -278,6 +423,16 @@ def _secret_spans(text: str) -> list[tuple[int, int]]:
         else:
             merged.append((start, end))
     return merged
+
+
+def _replace_spans(text: str, spans: list[tuple[int, int]]) -> str:
+    parts: list[str] = []
+    last = 0
+    for start, end in spans:
+        parts += [text[last:start], REDACTED]
+        last = end
+    parts.append(text[last:])
+    return "".join(parts)
 
 
 def looks_sensitive(path: str) -> bool:
@@ -290,15 +445,13 @@ def redact_tokens(text: str) -> str:
     if not text:
         return text
     spans = _secret_spans(text)
-    if not spans:
-        return text
-    parts: list[str] = []
-    last = 0
-    for start, end in spans:
-        parts += [text[last:start], REDACTED]
-        last = end
-    parts.append(text[last:])
-    return "".join(parts)
+    return _replace_spans(text, spans) if spans else text
+
+
+def _redact_cookie_header(value: str) -> str:
+    """Redact a `Cookie` or `Set-Cookie` header value stored without its header name."""
+    spans = _cookie_pair_spans(value, 0, len(value)) + _secret_spans(value)
+    return _replace_spans(value, _merge(spans)) if spans else value
 
 
 def redact_data(value: Any) -> Any:
@@ -313,6 +466,11 @@ def redact_data(value: Any) -> Any:
 
 
 def _redact_entry(key: Any, item: Any) -> Any:
+    if isinstance(key, str) and key.lower() in ("cookie", "set-cookie"):
+        if isinstance(item, str):
+            return _redact_cookie_header(item)
+        if isinstance(item, (list, tuple)):  # several Set-Cookie headers
+            return [_redact_cookie_header(v) if isinstance(v, str) else redact_data(v) for v in item]
     if (
         isinstance(key, str)
         and isinstance(item, str)
