@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from itertools import pairwise
 from typing import Any
 
 SENSITIVE_FILENAME_PATTERNS = (
@@ -195,6 +196,13 @@ _PROSE_PASSWORD_RE = re.compile(
     re.IGNORECASE,
 )
 _MIN_PROSE_LEN = 6
+# Words that say how a password is handled, not what it is: "the password is
+# case-insensitive", "... is SHA256-hashed", "... is PBKDF2 hashed".
+_PROSE_DESCRIPTION_RE = re.compile(
+    r"(?:[A-Za-z0-9]+-)+[a-z]*(?:ed|ive|ic|ly|only|based|safe|proof|free|wide|bound)"
+    r"|(?i:base(?:32|64)|sha-?(?:1|224|256|384|512)|md5|pbkdf2|bcrypt|scrypt|argon2(?:i|d|id)?"
+    r"|aes-?(?:128|192|256)|rot13|utf-?(?:8|16|32))"
+)
 
 
 def is_secret_name(name: str) -> bool:
@@ -381,17 +389,45 @@ def _curl_spans(text: str) -> list[tuple[int, int]]:
     return spans
 
 
+def _looks_like_prose_password(value: str) -> bool:
+    """Stricter than ``_looks_like_credential``, because the value follows ordinary prose.
+
+    Prose capitalizes words ("Required", German "Pflicht"), has long words
+    ("Sicherheitsrelevant") and umlauts ("ungültig"). A password value needs a digit, a
+    symbol, or a lower-case letter right before an upper-case one ("CorrectHorse").
+    """
+    if _PROSE_DESCRIPTION_RE.fullmatch(value):
+        return False
+    return (
+        any(c.isdigit() for c in value)
+        or any(a.islower() and b.isupper() for a, b in pairwise(value))
+        or re.search(r"[^\w-]", value) is not None
+    )
+
+
+def _prose_value_at(text: str, pos: int) -> tuple[int, int] | None:
+    """The value after "the password is": a word, a quoted string or Markdown code."""
+    if text.startswith("`", pos):
+        end = text.find("`", pos + 1)
+        newline = text.find("\n", pos + 1)
+        if end == -1 or -1 < newline < end:
+            return None
+        return pos + 1, end
+    found = _value_at(text, pos, _BARE_VALUE_RE)
+    return None if found is None else (found[0], found[1])
+
+
 def _prose_spans(text: str) -> list[tuple[int, int]]:
     spans = []
     for match in _PROSE_PASSWORD_RE.finditer(text):
-        found = _value_at(text, match.end(), _BARE_VALUE_RE)
+        found = _prose_value_at(text, match.end())
         if found is None:
             continue
-        start, end, _, _ = found
+        start, end = found
         value = text[start:end]
         if (
             len(value) >= _MIN_PROSE_LEN
-            and _looks_like_credential(value)
+            and _looks_like_prose_password(value)
             and not _is_placeholder(value)
         ):
             spans.append((start, end))

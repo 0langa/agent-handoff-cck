@@ -430,6 +430,9 @@ def test_redact_tokens_password_prose() -> None:
         "Das Passwort ist Geheim123": "Das Passwort ist [REDACTED]",
         "Das Kennwort lautet: Xy7!abcd": "Das Kennwort lautet: [REDACTED]",
         'the password is "s3cret!"': 'the password is "[REDACTED]"',
+        # Markdown code, as agents write values in a handoff.
+        "The test user's password is `Sommer2024!`.": "The test user's password is `[REDACTED]`.",
+        "the password is `s3cr3t-pass`": "the password is `[REDACTED]`",
     }
     for text, expected in cases.items():
         assert scan_for_secrets(text), text
@@ -451,6 +454,28 @@ def test_redact_tokens_leaves_password_prose_alone() -> None:
         "Das Passwort ist falsch",
         "Das Passwort ist abgelaufen",
         "a passwordless login is set up",
+    ]:
+        _assert_intact(text)
+
+
+def test_redact_tokens_leaves_descriptive_password_prose_alone() -> None:
+    # Capitalized, long, umlauted, hyphenated and algorithm words describe a password.
+    for text in [
+        "The password is Optional for local dev.",
+        "the password is Required on first login",
+        "The password is case-insensitive.",
+        "The password is environment-specific.",
+        "The password is SHA256-hashed before storage.",
+        "The password is base64-encoded in the config.",
+        "The password is PBKDF2 hashed",
+        "The password is 2FA-protected",
+        "The password is Bitwarden-managed.",
+        "the password is `required`",
+        "Das Passwort ist Pflicht.",
+        "Das Passwort ist Standard bei allen Konten.",
+        "Das Passwort ist Sicherheitsrelevant.",
+        "Das Passwort ist ungültig.",
+        "Das Kennwort ist überall gleich.",
     ]:
         _assert_intact(text)
 
