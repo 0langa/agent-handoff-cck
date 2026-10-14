@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .privacy import redact_tokens
 from .render import render_export
 from .schema import HandoffSchema, Provider, parse_provider
 from .store import EXPORTS_DIR
@@ -24,7 +25,7 @@ def export_to(
     ensure_handoff_dirs(hd)
 
     provider = parse_provider(target)
-    content = render_export(handoff, provider)
+    content = redact_tokens(render_export(handoff, provider))
     path = export_path(hd, provider)
     with path.open("w", encoding="utf-8") as fh:
         fh.write(content)

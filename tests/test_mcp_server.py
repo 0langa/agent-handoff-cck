@@ -238,6 +238,39 @@ def test_secret_detected_in_capture(tmp_path: Path) -> None:
     assert result["json"]["error"]["code"] == "secret_detected"
 
 
+def test_capture_accepts_lookalike_secret_keys(tmp_path: Path) -> None:
+    # Regression: keys that merely contain "token" or "secret" tripped the secret check.
+    decisions = ['Keep {"tokenizer": "cl100k_base", "max_tokens": 16384000}']
+    result = _call(
+        "handoff_capture",
+        {
+            "repo_root": str(tmp_path),
+            "provider": "codex",
+            "title": "Tune the model call",
+            "decisions": decisions,
+            "constraints": ["token_count = estimate_tokens(text) stays under budget"],
+            "next": ["ask the secretary: jane.doe-smith"],
+        },
+    )
+    assert not result["is_error"], result["json"]
+    assert load(get_handoff_dir(tmp_path)).context.decisions == decisions
+
+
+def test_capture_rejects_bare_tokens_flags_and_url_passwords(tmp_path: Path) -> None:
+    github_token = "ghp_" + "aB3dE5fG7hJ9kL1mN0" * 2  # built at runtime for secret scanners
+    for item in [
+        f"push with {github_token}",
+        "rerun with --api-key 9f8e7d6c5b4a",
+        "clone https://deploy:hunter2pass@git.example.com/r.git",
+    ]:
+        result = _call(
+            "handoff_capture",
+            {"repo_root": str(tmp_path), "provider": "codex", "title": "Leak", "next": [item]},
+        )
+        assert result["is_error"], item
+        assert result["json"]["error"]["code"] == "secret_detected"
+
+
 def test_capture_returns_over_real_stdio(tmp_path: Path) -> None:
     """Regression: handoff_capture must return when the server runs over real stdio.
 

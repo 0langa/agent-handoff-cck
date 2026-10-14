@@ -3,7 +3,33 @@
 from pathlib import Path
 
 from agent_handoff import store
-from agent_handoff.schema import HandoffSchema
+from agent_handoff.export import export_to
+from agent_handoff.render import render_active
+from agent_handoff.schema import CommandRecord, HandoffSchema
+
+
+def test_every_write_is_redacted(tmp_path: Path) -> None:
+    handoff_dir = tmp_path / ".handoff"
+    h = HandoffSchema(task={"title": "test", "objective": "export GITHUB_TOKEN=abcdefgh12345"})
+    h.workspace.commands_run.append(CommandRecord(command="mytool --password hunter2"))
+    markdown = render_active(h)
+    assert "abcdefgh12345" in markdown  # rendering itself does not redact
+
+    store.save(h, handoff_dir)
+    store.write_active_md(markdown, handoff_dir)
+    store.snapshot(h, handoff_dir, markdown)
+    export_to(h, "codex", handoff_dir)
+
+    written = [p for p in handoff_dir.rglob("*") if p.is_file()]
+    assert len(written) == 5  # active.json, active.md, history .json/.md, export
+    for path in written:
+        text = path.read_text(encoding="utf-8")
+        assert "abcdefgh12345" not in text, path
+        assert "hunter2" not in text, path
+        assert "[REDACTED]" in text, path
+    loaded = store.load(handoff_dir)
+    assert loaded.task.objective == "export GITHUB_TOKEN=[REDACTED]"
+    assert loaded.workspace.commands_run[0].command == "mytool --password [REDACTED]"
 
 
 def test_save_and_load(tmp_path: Path) -> None:

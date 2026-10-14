@@ -114,17 +114,25 @@ Codex-specific: record provider-bound connectors (Gmail, GitHub) as capabilities
 
 ### Claude Code
 
-Install the plugin from a local path. Slash commands become available when the client discovers `commands/`:
+Install from the `0langas-plugins` marketplace (add it once first), or load a local checkout for one session:
 
 ```text
-/handoff:init --title "..." --objective "..."
-/handoff:capture --done "step A" --next "step B"
-/handoff:status
-/handoff:verify
-/handoff:export codex
-/handoff:resume
-/handoff:close
-/handoff kimi
+claude plugin marketplace add 0langa/0langas-plugin-marketplace
+claude plugin install agent-handoff@0langas-plugins
+claude --plugin-dir C:\Users\...\agent-handoff-cck
+```
+
+Commands are namespaced under the plugin name:
+
+```text
+/agent-handoff:init --title "..." --objective "..."
+/agent-handoff:capture --done "step A" --next "step B"
+/agent-handoff:status
+/agent-handoff:verify
+/agent-handoff:export codex
+/agent-handoff:resume
+/agent-handoff:close
+/agent-handoff:handoff kimi
 ```
 
 Claude Code agents (`handoff-verifier`, `handoff-summarizer`) are available through the default `agents/` directory discovery.
@@ -193,7 +201,7 @@ When a capability is provider-bound (e.g., Codex Gmail connector), record a fall
 ## Safety
 
 - `.env`, tokens, keys, and raw private data are never captured.
-- Secrets are redacted from command output.
+- Secret-looking values are redacted from everything written to `.handoff/`, by the MCP tools and the CLI alike: secret `key: value` pairs, `--token`-style flags, URL passwords and well-known token formats.
 - Sensitive sources are listed by category, not by content.
 - Destructive actions require explicit recording and user approval flags.
 
