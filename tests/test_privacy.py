@@ -38,6 +38,21 @@ def test_redact_tokens_bearer_header() -> None:
     assert redact_tokens(text) == "Authorization: Bearer [REDACTED]"
 
 
+def test_redact_tokens_quoted_auth_header_values() -> None:
+    # The scheme sits inside the quoted value in JSON, Python dicts, and YAML.
+    cases = {
+        '{"Authorization": "Bearer abcdefghijklmnop1234"}': "abcdefghijklmnop1234",
+        "headers = {'Authorization': 'Bearer abcdefghijklmnop1234'}": "abcdefghijklmnop1234",
+        'authorization: "Bearer abcdefghijklmnop1234"': "abcdefghijklmnop1234",
+        '{"Authorization": "Basic dXNlcjpwYXNzd29yZA=="}': "dXNlcjpwYXNzd29yZA==",
+    }
+    for text, secret in cases.items():
+        assert scan_for_secrets(text), text
+        redacted = redact_tokens(text)
+        assert secret not in redacted, redacted
+        assert "[REDACTED]" in redacted, redacted
+
+
 def test_safe_changed_files_filters_env() -> None:
     files = ["src/main.py", ".env", "tests/test.py"]
     safe = safe_changed_files(files)

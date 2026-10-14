@@ -32,10 +32,11 @@ SENSITIVE_SOURCES = (
 )
 
 # The optional quote after the key covers JSON (`"api_key": "..."`); the optional
-# scheme covers HTTP headers (`Authorization: Bearer ...`).
+# scheme covers HTTP headers (`Authorization: Bearer ...`), including quoted header
+# values such as `{"Authorization": "Bearer ..."}` in JSON, Python dicts, or YAML.
 TOKEN_RE = re.compile(
     r"([\w-]*(?:token|key|secret|password|passwd|credential|auth)[\w-]*['\"]?\s*[:=]\s*"
-    r"(?:(?:bearer|basic|token)\s+)?)"
+    r"(?:['\"]?(?:bearer|basic|token)\s+)?)"
     r"['\"]?[A-Za-z0-9_\-./=+]{8,}['\"]?",
     re.IGNORECASE,
 )
