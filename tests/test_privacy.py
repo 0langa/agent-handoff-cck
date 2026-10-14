@@ -125,6 +125,9 @@ def test_redact_tokens_secret_key_values() -> None:
     for text, secret in cases.items():
         _assert_redacted(text, secret)
     assert redact_tokens('{"password": "hunter2"}') == '{"password": "[REDACTED]"}'
+    # Unquoted values keep special characters, including a trailing "!".
+    assert redact_tokens("password=p@ssw0rd!") == "password=[REDACTED]"
+    assert redact_tokens("Set password=hunter2hunter.") == "Set password=[REDACTED]."
 
 
 def test_redact_tokens_leaves_lookalike_keys_alone() -> None:
@@ -233,6 +236,7 @@ def test_redact_tokens_secret_cli_flags() -> None:
         "vault login -token abc123def": "vault login -token [REDACTED]",
         "consul acl token list -token=abc123": "consul acl token list -token=[REDACTED]",
         "(use --token abc123).": "(use --token [REDACTED]).",
+        "mytool --password Summer2024!": "mytool --password [REDACTED]",
     }
     for text, expected in cases.items():
         assert scan_for_secrets(text), text

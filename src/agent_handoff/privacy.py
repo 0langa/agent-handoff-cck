@@ -206,8 +206,11 @@ def _value_at(
 
 
 def _strip_trailing_punctuation(word: str) -> str:
-    """Drop sentence punctuation and unbalanced closing brackets: `abc123).` -> `abc123`."""
-    while word and word[-1] in ".:!?)]}":
+    """Drop sentence punctuation and unbalanced closing brackets: `abc123).` -> `abc123`.
+
+    A trailing `!` stays part of the value, because passwords often end in one.
+    """
+    while word and word[-1] in ".:?)]}":
         opener = _CLOSERS.get(word[-1])
         if opener and word.count(opener) >= word.count(word[-1]):
             break
