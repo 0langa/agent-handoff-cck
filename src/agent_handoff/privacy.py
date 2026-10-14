@@ -203,6 +203,7 @@ _PROSE_DESCRIPTION_RE = re.compile(
     r"|(?i:base(?:32|64)|sha-?(?:1|224|256|384|512)|md5|pbkdf2|bcrypt|scrypt|argon2(?:i|d|id)?"
     r"|aes-?(?:128|192|256)|rot13|utf-?(?:8|16|32))"
 )
+_JSON_LINE_ESCAPE_RE = re.compile(r"\\[nrt]")
 
 
 def is_secret_name(name: str) -> bool:
@@ -414,7 +415,11 @@ def _prose_value_at(text: str, pos: int) -> tuple[int, int] | None:
             return None
         return pos + 1, end
     found = _value_at(text, pos, _BARE_VALUE_RE)
-    return None if found is None else (found[0], found[1])
+    if found is None:
+        return None
+    # In JSON text a `\n` escape ends the line: "password is lost\nHow to reset it".
+    escape = _JSON_LINE_ESCAPE_RE.search(text, found[0], found[1])
+    return found[0], escape.start() if escape else found[1]
 
 
 def _prose_spans(text: str) -> list[tuple[int, int]]:

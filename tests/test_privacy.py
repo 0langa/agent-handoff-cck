@@ -433,6 +433,8 @@ def test_redact_tokens_password_prose() -> None:
         # Markdown code, as agents write values in a handoff.
         "The test user's password is `Sommer2024!`.": "The test user's password is `[REDACTED]`.",
         "the password is `s3cr3t-pass`": "the password is `[REDACTED]`",
+        # In JSON text a `\n` escape ends the value.
+        '{"note": "the password is Sommer2024!\\nnext step"}': '{"note": "the password is [REDACTED]\\nnext step"}',
     }
     for text, expected in cases.items():
         assert scan_for_secrets(text), text
@@ -476,6 +478,7 @@ def test_redact_tokens_leaves_descriptive_password_prose_alone() -> None:
         "Das Passwort ist Sicherheitsrelevant.",
         "Das Passwort ist ungültig.",
         "Das Kennwort ist überall gleich.",
+        '{"text": "If your password is lost\\nHow to reset it"}',
     ]:
         _assert_intact(text)
 
