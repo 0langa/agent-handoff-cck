@@ -114,9 +114,10 @@ Codex-specific: record provider-bound connectors (Gmail, GitHub) as capabilities
 
 ### Claude Code
 
-Install from the `0langas-plugins` marketplace, or load a local checkout for one session:
+Install from the `0langas-plugins` marketplace (add it once first), or load a local checkout for one session:
 
 ```text
+claude plugin marketplace add 0langa/0langas-plugin-marketplace
 claude plugin install agent-handoff@0langas-plugins
 claude --plugin-dir C:\Users\...\agent-handoff-cck
 ```
