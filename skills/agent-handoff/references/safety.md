@@ -44,4 +44,11 @@ Add short notes explaining what was avoided and why:
 
 ## Redaction
 
-Command outputs are scanned for token-like values and redacted before storage.
+Everything written to `.handoff/` is redacted before storage, whether it comes from the MCP tools or the CLI. Redaction replaces:
+
+- values after secret key names, as in `api_key: ...`, `"client_secret": "..."`, `GITHUB_TOKEN=...` or `Authorization: Bearer ...`. Names such as `tokenizer`, `max_tokens` or `secretary` are left alone.
+- values of secret CLI flags, such as `--token`, `--password`, `--api-key` and `--secret`.
+- passwords in URLs: `https://user:[REDACTED]@host`.
+- well-known token formats on their own: GitHub, OpenAI, Anthropic, AWS access key IDs, Slack, Google, GitLab, npm and JWTs.
+
+`handoff_capture` rejects free-text items that contain such values. Redaction is pattern-based, so summarize secrets instead of pasting them: a password in plain prose without a key or flag is not detected.
