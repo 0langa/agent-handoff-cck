@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 SENSITIVE_FILENAME_PATTERNS = (
     ".env",
@@ -295,6 +296,29 @@ def redact_tokens(text: str) -> str:
         last = end
     parts.append(text[last:])
     return "".join(parts)
+
+
+def redact_data(value: Any) -> Any:
+    """Redact JSON-like data: every string, and any string stored under a secret name."""
+    if isinstance(value, str):
+        return redact_tokens(value)
+    if isinstance(value, dict):
+        return {key: _redact_entry(key, item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [redact_data(item) for item in value]
+    return value
+
+
+def _redact_entry(key: Any, item: Any) -> Any:
+    if (
+        isinstance(key, str)
+        and isinstance(item, str)
+        and item
+        and is_secret_name(key)
+        and not _is_placeholder(item)
+    ):
+        return REDACTED
+    return redact_data(item)
 
 
 def safe_changed_files(paths: list[str]) -> list[str]:

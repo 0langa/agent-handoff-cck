@@ -1,4 +1,8 @@
-"""Persistence layer for handoff artifacts."""
+"""Persistence layer for handoff artifacts.
+
+Every file written here passes through the privacy redaction, so handoffs written by
+the CLI and by the MCP tools are redacted the same way.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +12,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from .privacy import redact_data, redact_tokens
 from .schema import HandoffSchema, TaskStatus
 
 DEFAULT_HANDOFF_DIR = ".handoff"
@@ -53,12 +58,17 @@ def load(handoff_dir: Path | None = None) -> HandoffSchema:
     return HandoffSchema.model_validate(data)
 
 
+def _redacted_dump(handoff: HandoffSchema) -> dict[str, Any]:
+    """Serialize a handoff for disk with secret-looking values redacted."""
+    return redact_data(handoff.model_dump(by_alias=True, mode="json"))
+
+
 def save(handoff: HandoffSchema, handoff_dir: Path | None = None) -> Path:
     hd = handoff_dir or get_handoff_dir()
     ensure_handoff_dirs(hd)
     path = active_json_path(hd)
     with path.open("w", encoding="utf-8") as fh:
-        json.dump(handoff.model_dump(by_alias=True, mode="json"), fh, indent=2)
+        json.dump(_redacted_dump(handoff), fh, indent=2)
         fh.write("\n")
     return path
 
@@ -76,9 +86,10 @@ def snapshot(
     snap_json = hd / HISTORY_DIR / f"{name}.json"
     snap_md = hd / HISTORY_DIR / f"{name}.md"
     with snap_json.open("w", encoding="utf-8") as fh:
-        json.dump(handoff.model_dump(by_alias=True, mode="json"), fh, indent=2)
+        json.dump(_redacted_dump(handoff), fh, indent=2)
         fh.write("\n")
     if markdown is not None:
+        markdown = redact_tokens(markdown)
         with snap_md.open("w", encoding="utf-8") as fh:
             fh.write(markdown)
             if not markdown.endswith("\n"):
@@ -90,6 +101,7 @@ def write_active_md(content: str, handoff_dir: Path | None = None) -> Path:
     hd = handoff_dir or get_handoff_dir()
     ensure_handoff_dirs(hd)
     path = active_md_path(hd)
+    content = redact_tokens(content)
     with path.open("w", encoding="utf-8") as fh:
         fh.write(content)
         if not content.endswith("\n"):

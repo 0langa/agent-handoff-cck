@@ -5,6 +5,7 @@ import base64
 from agent_handoff.privacy import (
     is_secret_name,
     looks_sensitive,
+    redact_data,
     redact_tokens,
     safe_changed_files,
     scan_for_secrets,
@@ -293,6 +294,21 @@ def test_redact_tokens_leaves_urls_without_passwords_alone() -> None:
         "postgres://user:****@db/app",
     ]:
         _assert_intact(text)
+
+
+def test_redact_data_walks_json_like_values() -> None:
+    data = {
+        "title": "use GITHUB_TOKEN=abcdefgh12345",
+        "items": ["mytool --password hunter2", 3, None, True],
+        "nested": {"api_key": "x1", "max_tokens": "16384000", "token": "${TOKEN}"},
+        "password": "hunter2",
+    }
+    assert redact_data(data) == {
+        "title": "use GITHUB_TOKEN=[REDACTED]",
+        "items": ["mytool --password [REDACTED]", 3, None, True],
+        "nested": {"api_key": "[REDACTED]", "max_tokens": "16384000", "token": "${TOKEN}"},
+        "password": "[REDACTED]",
+    }
 
 
 def test_safe_changed_files_filters_env() -> None:
