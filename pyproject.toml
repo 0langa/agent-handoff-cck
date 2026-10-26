@@ -1,7 +1,7 @@
 [project]
 name = "agent-handoff"
-version = "0.2.7"
-description = "Cross-agent handoff plugin for Codex, Claude Code, and Kimi Code."
+version = "0.2.8"
+description = "Dormant: Capture task context and resume it in another coding agent."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

@@ -1,7 +1,7 @@
 {
   "name": "agent-handoff",
-  "version": "0.2.7",
-  "description": "Provider-neutral handoff records for Claude Code, Codex, and Kimi Code.",
+  "version": "0.2.8",
+  "description": "Dormant: Capture task context and resume it in another coding agent.",
   "author": {
     "name": "0langa"
   },

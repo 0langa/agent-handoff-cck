@@ -1,7 +1,7 @@
 {
   "name": "agent-handoff",
-  "version": "0.2.7",
-  "description": "Provider-neutral handoff records for Kimi Code, Codex, and Claude Code.",
+  "version": "0.2.8",
+  "description": "Dormant: Capture task context and resume it in another coding agent.",
   "keywords": [
     "handoff",
     "continuity",
@@ -16,8 +16,8 @@
   "license": "MIT",
   "interface": {
     "displayName": "Agent Handoff",
-    "shortDescription": "Capture and resume cross-agent handoffs.",
-    "longDescription": "Provider-neutral handoff records for Kimi Code, Codex, and Claude Code.",
+    "shortDescription": "Dormant: Capture task context and resume it in another coding agent.",
+    "longDescription": "Dormant: Capture task context and resume it in another coding agent. Available as-is, with no planned updates. Kimi compatibility is legacy.",
     "developerName": "0langa",
     "websiteURL": "https://github.com/0langa/agent-handoff-cck"
   },

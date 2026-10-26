@@ -1,5 +1,8 @@
 # Agent Handoff (`agent-handoff`)
 
+> **Dormant:** Available as-is, with no planned updates. This plugin is no longer part of my maintained workflow. Existing releases remain installable.
+> Kimi compatibility is legacy and is not actively tested.
+
 Cross-agent handoff plugin for Codex, Claude Code, and Kimi Code.
 
 ## Goal
